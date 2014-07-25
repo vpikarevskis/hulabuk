@@ -1,0 +1,301 @@
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+  display: none !important;
+}
+
+html, body {
+	height: 100%;
+}
+
+.welcome {
+	font-family: 'Molle' !important;
+	font-style: italic;
+	font-weight: 400;
+}
+
+.btn-group>.btn:hover, .btn-group-vertical>.btn:hover, .btn-group>.btn:focus, .btn-group-vertical>.btn:focus, .btn-group>.btn:active, .btn-group-vertical>.btn:active, .btn-group>.btn.active, .btn-group-vertical>.btn.active{
+	z-index: 0;
+}
+
+.container-fluid.first-container {
+    display: table;
+    width: 100%;
+    height: 100vh;
+    background-color: #34495E;
+    background-image: url('https://s3.amazonaws.com/ooomf-com-files/yvDPJ8ZSmSVob7pRxIvU_IMG_40322.jpg');
+    background-size: cover;
+}
+
+.container-fluid.first-container > div{
+	display: table-cell;
+	vertical-align: middle;
+}
+
+.container-fluid.second-container {
+	height: 100vh;
+}
+
+.carousel-control.left, .carousel-control.right {
+	background-image: none;
+	cursor: pointer;
+}
+
+.carousel-control .glyphicon-chevron-left, .carousel-control .glyphicon-chevron-right, .carousel-control .icon-prev, .carousel-control .icon-next {
+	font-size: 25px;
+}
+
+.front-lightbox-image a{
+	position: relative;
+	padding-top: 56.25%;
+	height: 0;
+	display: block;
+	background-color: #ECF0F1;
+	border-radius: 6px;
+}
+
+.front-lightbox-image img {
+	position: absolute;
+	margin: auto;
+	max-width: 100%;
+	max-height: 100%;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+
+.carousel .thumbnail {
+	border-radius: 6px;
+}
+
+.glyph-rating {
+	color: #16a085;
+}
+
+.glyph-rating:hover {
+	color: #1ABC9C;
+	cursor: pointer;
+}
+
+.input-icon {
+	vertical-align: top;
+}
+
+.navbar {
+	position: absolute;
+	width: 100%;
+	z-index: 3;
+	margin-bottom: 0px;
+}
+
+.no-top-margin {
+	margin-top: 0px;
+}
+
+body > .dropdown-menu {
+	visibility: visible;
+	opacity: 1;
+}
+
+.angular-date-range-picker__month-name {
+	background: inherit;
+	border-bottom: 2px solid #ecf0f1;
+}
+
+.angular-date-range-picker__calendar-weekday {
+	text-align: center;
+}
+
+.angular-date-range-picker__calendar-day:hover {
+	background-color: #BDC3C7;
+	border-radius: 6px;
+}
+
+.angular-date-range-picker__calendar-day.angular-date-range-picker__calendar-day-selected, .angular-date-range-picker__calendar-day-start {
+	background-color: #1ABC9C;
+	border-radius: 6px;
+}
+
+.angular-date-range-picker__calendar-day, .angular-date-range-picker__calendar-day-selected, .angular-date-range-picker__calendar-day-disabled, .angular-date-range-picker__calendar-day-start {
+	border: 2px solid #f5f5f5;
+}
+
+.angular-date-range-picker__calendar-day-unavailable {
+	color: #ECF0F1;
+}
+
+.table>thead>tr>th, .table>tbody>tr>th, .table>tfoot>tr>th, .table>thead>tr>td, .table>tbody>tr>td, .table>tfoot>tr>td {
+	border: 2px solid #f5f5f5;
+	vertical-align: middle;
+}
+
+.table {
+	table-layout: fixed;
+	margin-bottom: 0px;
+}
+
+.month-arrow {
+	cursor: pointer;
+	font-size: 42px;
+}
+
+.cal-entry {
+	font-size: 100%;
+	min-height: 200px;
+}
+
+.well {
+	border-radius: 6px;
+	border: none;
+	opacity: 0.9;
+}
+
+.jumbotron {
+	background-color: transparent;
+	margin-bottom: 0px;
+}
+
+.col-map {
+	padding: 0px;
+}
+
+.angular-google-map-container {
+	height: 100vh;
+}
+
+h3.no-top-margin {
+	color: #ffffff;
+}
+
+hr {
+	border-top-width: 2px;
+}
+
+.lead {
+	margin-bottom: 0px;
+	font-size: 1.25em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.hotel-name {
+	white-space: nowrap;
+}
+
+.hotel-list {
+	overflow-y: scroll;
+}
+
+.height-inherit {
+	height: inherit;
+}
+
+.ui-slider {
+	margin-bottom: 0px;
+}
+
+.ui-slider-horizontal .ui-slider-handle[style="left: 0%;"] {
+	margin-left: 0px;
+}
+
+.ui-slider-horizontal .ui-slider-handle {
+	margin-left: -18px;
+}
+
+.ui-slider-horizontal .ui-slider-range {
+	border-radius: 30px;
+}
+
+.ui-slider :nth-child(2){
+	margin-left: 0px;
+}
+
+.filter-separator {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+.block-ui-message {
+	background-color: #ffffff;
+	border-radius: 6px;
+	color: #34495e;
+}
+
+.hotelEntry > img {
+	width: 100%;
+}
+
+.progress {
+	margin-top: 10px;
+}
+
+.nephritis {
+	background-color: #27ae60;
+}
+
+.emerald {
+	background-color: #2ecc71;
+}
+
+.sunflower {
+	background-color: #f1c40f;
+}
+
+.orange {
+	background-color: #f39c12;
+}
+
+.carrot {
+	background-color: #e67e22;
+}
+
+.pumpkin {
+	background-color: #d35400;
+}
+
+.alizarin {
+	background-color: #e74c3c;
+}
+
+.pomegranate {
+	background-color: #c0392b;
+}
+
+.angular-date-range-picker__calendar-day-nephritis {
+	background-color: #27ae60;
+	border-radius: 6px;
+}
+
+.angular-date-range-picker__calendar-day-emerald {
+	background-color: #2ecc71;
+	border-radius: 6px;
+}
+
+.angular-date-range-picker__calendar-day-sunflower {
+	background-color: #f1c40f;
+	border-radius: 6px;
+}
+
+.angular-date-range-picker__calendar-day-orange {
+	background-color: #f39c12;
+	border-radius: 6px;
+}
+
+.angular-date-range-picker__calendar-day-carrot {
+	background-color: #e67e22;
+	border-radius: 6px;
+}
+
+.angular-date-range-picker__calendar-day-pumpkin {
+	background-color: #d35400;
+	border-radius: 6px;
+}
+
+.angular-date-range-picker__calendar-day-alizarin {
+	background-color: #e74c3c;
+	border-radius: 6px;
+}
+
+.angular-date-range-picker__calendar-day-pomegranate {
+	background-color: #c0392b;
+	border-radius: 6px;
+}

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html ng-app="sharikiApp" resize>
+	<head>
+		<title><%= title %></title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" media="screen">
+		<link href="//fonts.googleapis.com/css?family=Molle:400italic" rel="stylesheet">
+		<link href="//fonts.googleapis.com/css?family=Lato:300,400,700" rel="stylesheet">
+		<link href="/stylesheets/flat-ui.css" rel="stylesheet">
+		<link rel='shortcut icon' href="/images/landing/logo_v3.png" type='image/x-icon'>
+		<link rel='icon' href="/images/landing/logo_v3.png" type='image/x-icon'>
+		<link href="//cdnjs.cloudflare.com/ajax/libs/ekko-lightbox/3.0.3a/ekko-lightbox.min.css" rel="stylesheet">
+		<link href="/stylesheets/dark-lightbox.css" rel="stylesheet">
+		<link href="/stylesheets/angular-date-range-picker.css" rel="stylesheet">
+		<link href="/stylesheets/angular-block-ui.min.css" rel="stylesheet">
+		<link href="/stylesheets/custom.css" rel="stylesheet">
+	</head>
+	<body ng-controller="RoomListCtrl">
+		<!-- Navigation -->
+		<nav class="navbar navbar-default" role="navigation" ng-show="!showHotelList">
+			<div class="navbar-header">
+				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse-01">
+				<span class="sr-only">Toggle navigation</span>
+				</button>
+				<a class="navbar-brand welcome" href="/">hulabuk</a>
+			</div>
+			<div class="collapse navbar-collapse" id="navbar-collapse-01">
+				<ul class="nav navbar-nav navbar-right">
+					<li><a href="/about">about</a></li>
+				</ul>
+			</div>
+		</nav>
+
+		<!-- Content -->
+		<div class="container-fluid first-container" ng-show="!showHotelList">
+			<div class="container">
+				<div class="row">
+					<div class="col-xs-12 col-md-offset-1 col-md-10">
+						<div class="jumbotron mtl">
+							<div class="row ng-cloak">
+								<div class="col-xs-12 col-md-12">
+									<h3 class="no-top-margin">i'm traveling to</h3>
+								</div>
+							</div>
+							<div class="row ng-cloak">
+								<div class="col-xs-12 col-md-6">
+									<button class="btn btn-block btn-primary mbl" ng-click="setLocation('9B0681E3-6D9F-47E8-8E14-5389F83569DD')">Paris, France<span ng-show="cityLocationId == '9B0681E3-6D9F-47E8-8E14-5389F83569DD'">&nbsp;&nbsp;</span><span ng-show="cityLocationId == '9B0681E3-6D9F-47E8-8E14-5389F83569DD'" class="fui-check-inverted"></span></button>
+								</div>
+								<div class="col-xs-12 col-md-6">
+									<button class="btn btn-block btn-primary mbl" ng-click="setLocation('CA62CF56-3490-467B-B531-99D1956120C4')">Rome, Italy<span ng-show="cityLocationId == 'CA62CF56-3490-467B-B531-99D1956120C4'">&nbsp;&nbsp;</span><span ng-show="cityLocationId == 'CA62CF56-3490-467B-B531-99D1956120C4'" class="fui-check-inverted"></span></button>
+								</div>
+							</div>
+							<div class="row ng-cloak">
+								<div class="col-xs-12 col-md-12">
+									<h3 class="no-top-margin">i want to see honest hotel prices for</h3>
+								</div>
+							</div>
+							<div class="well">
+								<date-range-picker ng-model="selectedRange" always-visible="true" ranged="true" past-dates="true" calendar-averages="calendarAverages" class="row calendar-row ng-cloak"></date-range-picker>
+								<div class="row">
+									<div class="col-xs-2 col-md-2">
+										<p class="pull-right">£</p>
+									</div>
+									<div class="col-xs-8 col-md-8">
+										<div class="progress">
+								            <div class="progress-bar nephritis" style="width: 12.5%;"></div>
+								            <div class="progress-bar emerald" style="width: 12.5%;"></div>
+								            <div class="progress-bar sunflower" style="width: 12.5%;"></div>
+								            <div class="progress-bar orange" style="width: 12.5%;"></div>
+								            <div class="progress-bar carrot" style="width: 12.5%;"></div>
+								            <div class="progress-bar pumpkin" style="width: 12.5%;"></div>
+								            <div class="progress-bar alizarin" style="width: 12.5%;"></div>
+								            <div class="progress-bar pomegranate" style="width: 12.5%;"></div>
+								        </div>
+	          						</div>
+		          						<div class="col-xs-2 col-md-2">
+											<p>£££</p>
+										</div>
+								</div>
+							</div>
+							<div class="mtl row ng-cloak">
+								<div class="col-xs-12 col-md-12">
+									<button class="btn btn-block btn-primary" ng-click="seeHotels()">see honest hotel prices</button>
+								</div>	
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="container-fluid second-container ng-cloak" ng-show="showHotelList">
+			<div class="row height-inherit">
+				<div class="col-md-7 col-xs-12 height-inherit">
+					<div class="row filters">
+						<div class="col-xs-12 col-md-12">
+							<div class="row">
+								<div class="col-md-12 col-xs-12">
+									<h6>
+										Hotels in <span ng-show="cityLocationId === '9B0681E3-6D9F-47E8-8E14-5389F83569DD'">Paris, France</span><span ng-show="cityLocationId === 'CA62CF56-3490-467B-B531-99D1956120C4'">Rome, Italy</span> <small>{{ selectedRange ? selectedRange.start.format('D MMM YY') : '' }} - {{ selectedRange ? selectedRange.end.format('D MMM YY') : ''}}  </small>
+										<a href="" ng-click="showHotelList = !showHotelList">
+											<span class="glyphicon glyphicon-pencil small"></span>
+										</a>
+									</h6>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-3 col-xs-12">
+									<p><small>Stars</small></p>
+								</div>
+								<div class="col-md-8 col-xs-12">
+									<div ui-slider="starSliderOptions" min="1" max="5" step="1" ng-model="stars" class="ui-slider"></div>
+									<span class="pull-left"><small>{{stars[0]}}</small></span>
+									<span class="pull-right"><small>{{stars[1]}}</small></span>
+								</div>
+							</div>
+							<div class="row">
+								<div class="col-md-3 col-xs-12">
+									<p><small>Nightly price</small></p>
+								</div>
+								<div class="col-md-8 col-xs-12">
+									<div ui-slider="rateSliderOptions" min="0" max="500" step="10" ng-model="rates" class="ui-slider">
+									</div>
+									<span class="pull-left"><small>£{{rates[0]}}</small></span>
+									<span class="pull-right"><small>£{{rates[1] == 500 ? '500+' : rates[1] }}</small></span>
+								</div>
+							</div>
+							<div class="row row-separator">
+								<div class="col-md-12 col-xs-12">
+									<hr class="filter-separator"></hr>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<div class="row hotel-list">
+						<div class="col-xs-12 col-md-12">
+							<div class="row">
+								<div ng-show="hotels.length < 1" class="col-xs-12 col-md-6">
+									<p class="text-warning">Jeez, no hotels matches that criteria!</p>
+								</div>
+								<div class="col-xs-12 col-md-6" ng-repeat="hotel in hotels | filter:filterHotel | orderBy:sortHotel">
+									<img class="img-rounded img-responsive" ng-src="{{constructPicture(hotel)}}"></img>
+									<p class="lead"><strong><small class="hotel-name">{{ decodeXML(hotel.name) }}</small></strong></p>
+									<p class="text-muted"><small><span ng-repeat="star in range(hotel.hotelRating) track by $index">&#9733;</span>&nbsp;&#183;&nbsp;{{ hotel.city }}</small></p>
+									<div class="form-group">
+										<a ng-href="{{constructURL(hotel)}}" class="btn btn-wide btn-primary btn-add">
+											Book from £{{ hotel.RoomRateDetailsList.RoomRateDetails.RateInfo.ChargeableRateInfo["@averageRate"] | number : 0 }} per night
+										</a>
+									</div>
+								</div>
+							</div>
+							<button class="btn btn-inverse btn-block" ng-show="!selectedHotel" ng-disabled="!moreResultsAvailable" ng-click="loadMore()">Load more</button>
+							<button class="btn btn-primary btn-block" ng-show="selectedHotel" ng-click="selectedHotel = false">Show all hotels</button>
+						</div>
+					</div>
+				</div>
+				<div class="col-md-5 col-xs-12 col-map">
+					<google-map center="map.center" control="map.control" ng-if="mapLoaded || showHotelList" draggable="true" control="map.control" zoom="map.zoom">
+						<markers models="hotels" idKey="'hotelId'" click="'onClicked'" coords="'self'" fit="true">
+						</markers>
+					</google-map>
+				</div>
+			</div>
+		</div>
+
+		<!-- Scripts -->
+		<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/jqueryui/1.10.4/jquery-ui.min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/js/bootstrap.min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/jquery-placeholder/2.0.7/jquery.placeholder.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/angular.js/1.2.12/angular.min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/angular-ui-bootstrap/0.11.0/ui-bootstrap-tpls.min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/angular-bindonce/0.3.1/bindonce.min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/moment.js/2.7.0/moment.min.js"></script>
+		<script src="/javascripts/moment-range.js"></script>
+		<script src="/javascripts/angular-date-range-picker.js"></script>
+		<script src="//maps.googleapis.com/maps/api/js?sensor=false&key=AIzaSyAb3EpsXDg-hpLWpIFJuLmWADvSTRUdTlU"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.underscore.min.js"></script>
+		<script src="/javascripts/angular-google-maps.min.js"></script>
+		<script src="/javascripts/application.js"></script>
+		<script>
+		  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+		  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+		  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+		  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+		  ga('create', 'UA-50435179-2', 'hulabuk.com');
+		  ga('send', 'pageview');
+
+		</script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/ekko-lightbox/3.0.3a/ekko-lightbox.min.js"></script>
+		<script src="/javascripts/slider.js"></script>
+		<script src="/javascripts/angular-block-ui.min.js"></script>
+		<script src="/javascripts/viewport-units-buggyfill.js"></script>
+		<script src="/javascripts/controllers.js"></script>
+	</body>
+</html>
