@@ -117,6 +117,7 @@ body > .dropdown-menu {
 
 .angular-date-range-picker__calendar-day, .angular-date-range-picker__calendar-day-selected, .angular-date-range-picker__calendar-day-disabled, .angular-date-range-picker__calendar-day-start {
 	border: 2px solid #f5f5f5;
+	color:#ffffff;
 }
 
 .angular-date-range-picker__calendar-day-unavailable {
@@ -126,7 +127,6 @@ body > .dropdown-menu {
 .table>thead>tr>th, .table>tbody>tr>th, .table>tfoot>tr>th, .table>thead>tr>td, .table>tbody>tr>td, .table>tfoot>tr>td {
 	border: 2px solid #f5f5f5;
 	vertical-align: middle;
-	color:#ffffff;
 }
 
 .table {
@@ -298,5 +298,17 @@ hr {
 
 .angular-date-range-picker__calendar-day-pomegranate {
 	background-color: #c0392b;
+	border-radius: 6px;
+}
+
+.angular-date-range-picker__calendar-day-wrapper { 
+	text-align: center;
+}
+
+.hotel-listing {
+	padding: 10px;	
+}
+.hotel-listing:hover {
+	background-color: #ecf0f1;
 	border-radius: 6px;
 }

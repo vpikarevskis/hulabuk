@@ -80,7 +80,7 @@
 							</div>
 							<div class="mtl row ng-cloak">
 								<div class="col-xs-12 col-md-12">
-									<button class="btn btn-block btn-primary" ng-click="seeHotels()">see honest hotel prices</button>
+									<button class="btn btn-block btn-info" ng-click="seeHotels()">see honest hotel prices</button>
 								</div>	
 							</div>
 						</div>
@@ -139,10 +139,10 @@
 								<div ng-show="hotels.length < 1" class="col-xs-12 col-md-6">
 									<p class="text-warning">Jeez, no hotels matches that criteria!</p>
 								</div>
-								<div class="col-xs-12 col-md-6" ng-repeat="hotel in hotels | filter:filterHotel | orderBy:sortHotel">
+								<div class="col-xs-12 col-md-6 hotel-listing" ng-repeat="hotel in hotels | filter:filterHotel | orderBy:sortHotel">
 									<img class="img-rounded img-responsive" ng-src="{{constructPicture(hotel)}}"></img>
 									<p class="lead"><strong><small class="hotel-name">{{ decodeXML(hotel.name) }}</small></strong></p>
-									<p class="text-muted"><small><span ng-repeat="star in range(hotel.hotelRating) track by $index">&#9733;</span>&nbsp;&#183;&nbsp;{{ hotel.city }}</small></p>
+									<p class="text-muted"><small><span ng-if="hotel.hotelRating > 0" ng-repeat="star in range(hotel.hotelRating) track by $index">&#9733;</span><span ng-show="hotel.hotelRating > 0">&nbsp;&#183;&nbsp;</span>{{ hotel.city }}</small></p>
 									<div class="form-group">
 										<a ng-href="{{constructURL(hotel)}}" class="btn btn-wide btn-primary btn-add">
 											Book from £{{ hotel.RoomRateDetailsList.RoomRateDetails.RateInfo.ChargeableRateInfo["@averageRate"] | number : 0 }} per night
@@ -151,7 +151,7 @@
 								</div>
 							</div>
 							<button class="btn btn-inverse btn-block" ng-show="!selectedHotel" ng-disabled="!moreResultsAvailable" ng-click="loadMore()">Load more</button>
-							<button class="btn btn-primary btn-block" ng-show="selectedHotel" ng-click="selectedHotel = false">Show all hotels</button>
+							<button class="btn btn-inverse btn-block" ng-show="selectedHotel" ng-click="selectedHotel = false">Show all hotels</button>
 						</div>
 					</div>
 				</div>
