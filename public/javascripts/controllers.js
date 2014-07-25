@@ -94,7 +94,7 @@ sharikiApp.controller('RoomListCtrl', function($scope, $http, $timeout, $window,
 	$scope.locationData = {
 		'9B0681E3-6D9F-47E8-8E14-5389F83569DD': {'country': 'FR', 'city': 'Paris'},
 		'CA62CF56-3490-467B-B531-99D1956120C4': {'country': 'IT', 'city': 'Rome'}};
-	$scope.stars = [0,5];
+	$scope.stars = [0, 5];
 	$scope.rates = [0, 500];
 	$scope.hotelOrder = "PRICE";
 	$scope.sliderChangeCount = 0;
