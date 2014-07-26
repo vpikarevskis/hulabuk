@@ -161,7 +161,7 @@
 				</div>
 				<div class="col-md-5 col-xs-12 col-map">
 					<google-map center="map.center" control="map.control" ng-if="mapLoaded || showHotelList" draggable="true" control="map.control" zoom="map.zoom">
-						<<markers models="hotels" idKey="'hotelId'" click="'onClicked'" coords="'self'" icon="'icon'" fit="true">
+						<<markers models="hotels" idKey="'hotelId'" click="'onClicked'" coords="'self'" icon="'icon'" fit="true" doRebuildAll="true">
 						</markers>
 					</google-map>
 				</div>

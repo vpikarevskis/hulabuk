@@ -239,7 +239,7 @@ sharikiApp.controller('RoomListCtrl', function($scope, $http, $timeout, $window,
 				hotel.onClicked = function(){
 					$scope.selectHotel(hotel);
 				};
-				hotel.icon = 'http://www.googlemapsmarkers.com/v1/!/2ecc71/2ecc71/2ecc71/';
+				hotel.icon = '/images/markers/marker-green.png';
 			});
 
 			$scope.hotels = $scope.hotels.concat(data.HotelListResponse.HotelList.HotelSummary);
@@ -261,11 +261,11 @@ sharikiApp.controller('RoomListCtrl', function($scope, $http, $timeout, $window,
 	};
 
 	$scope.mouseOverHotelListing = function(hotel) {
-		hotel.icon = 'http://www.googlemapsmarkers.com/v1/!/3498db/3498db/3498db/';
+		hotel.icon = '/images/markers/marker-blue.png';
 	};
 
 	$scope.mouseLeaveHotelListing = function(hotel) {
-		hotel.icon = 'http://www.googlemapsmarkers.com/v1/!/2ecc71/2ecc71/2ecc71/';
+		hotel.icon = '/images/markers/marker-green.png';
 	};
 
 	$scope.constructPicture = function(hotel){
@@ -307,7 +307,6 @@ sharikiApp.controller('RoomListCtrl', function($scope, $http, $timeout, $window,
 
 	$scope.edit = function(){
 		$scope.showHotelList = false;
-		$scope.selectedRange = {};
 	};
 
 	$scope.setLocation = function(locationId)
