@@ -17,7 +17,7 @@
 	</head>
 	<body ng-controller="RoomListCtrl">
 		<!-- Navigation -->
-		<nav class="navbar navbar-default" role="navigation" ng-show="!showHotelList">
+		<nav class="navbar navbar-default navbar-abs" role="navigation" ng-show="!showHotelList">
 			<div class="navbar-header">
 				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse-01">
 				<span class="sr-only">Toggle navigation</span>
@@ -44,10 +44,10 @@
 							</div>
 							<div class="row ng-cloak">
 								<div class="col-xs-12 col-md-6">
-									<button class="btn btn-block btn-primary mbl" ng-click="setLocation('9B0681E3-6D9F-47E8-8E14-5389F83569DD')">Paris, France<span ng-show="cityLocationId == '9B0681E3-6D9F-47E8-8E14-5389F83569DD'">&nbsp;&nbsp;</span><span ng-show="cityLocationId == '9B0681E3-6D9F-47E8-8E14-5389F83569DD'" class="fui-check-inverted"></span></button>
+									<button class="btn btn-block btn-info mbl" ng-click="setLocation('9B0681E3-6D9F-47E8-8E14-5389F83569DD')">Paris, France<span ng-show="cityLocationId == '9B0681E3-6D9F-47E8-8E14-5389F83569DD'">&nbsp;&nbsp;</span><span ng-show="cityLocationId == '9B0681E3-6D9F-47E8-8E14-5389F83569DD'" class="fui-check-inverted"></span></button>
 								</div>
 								<div class="col-xs-12 col-md-6">
-									<button class="btn btn-block btn-primary mbl" ng-click="setLocation('CA62CF56-3490-467B-B531-99D1956120C4')">Rome, Italy<span ng-show="cityLocationId == 'CA62CF56-3490-467B-B531-99D1956120C4'">&nbsp;&nbsp;</span><span ng-show="cityLocationId == 'CA62CF56-3490-467B-B531-99D1956120C4'" class="fui-check-inverted"></span></button>
+									<button class="btn btn-block btn-info mbl" ng-click="setLocation('CA62CF56-3490-467B-B531-99D1956120C4')">Rome, Italy<span ng-show="cityLocationId == 'CA62CF56-3490-467B-B531-99D1956120C4'">&nbsp;&nbsp;</span><span ng-show="cityLocationId == 'CA62CF56-3490-467B-B531-99D1956120C4'" class="fui-check-inverted"></span></button>
 								</div>
 							</div>
 							<div class="row ng-cloak">
@@ -136,28 +136,32 @@
 					<div class="row hotel-list">
 						<div class="col-xs-12 col-md-12">
 							<div class="row">
-								<div ng-show="hotels.length < 1" class="col-xs-12 col-md-6">
-									<p class="text-warning">Jeez, no hotels matches that criteria!</p>
+								<div ng-show="hotels.length < 1" class="col-xs-12 col-md-12">
+									<p class="text-warning">Jeez, no hotels match that criteria! Try to refine the filters.</p>
 								</div>
-								<div class="col-xs-12 col-md-6 hotel-listing" ng-repeat="hotel in hotels | filter:filterHotel | orderBy:sortHotel">
-									<img class="img-rounded img-responsive" ng-src="{{constructPicture(hotel)}}"></img>
-									<p class="lead"><strong><small class="hotel-name">{{ decodeXML(hotel.name) }}</small></strong></p>
-									<p class="text-muted"><small><span ng-if="hotel.hotelRating > 0" ng-repeat="star in range(hotel.hotelRating) track by $index">&#9733;</span><span ng-show="hotel.hotelRating > 0">&nbsp;&#183;&nbsp;</span>{{ hotel.city }}</small></p>
-									<div class="form-group">
-										<a ng-href="{{constructURL(hotel)}}" class="btn btn-wide btn-primary btn-add">
-											Book from £{{ hotel.RoomRateDetailsList.RoomRateDetails.RateInfo.ChargeableRateInfo["@averageRate"] | number : 0 }} per night
-										</a>
+								<div class="col-xs-12 col-md-6" ng-mouseenter="mouseOverHotelListing(hotel)" ng-mouseleave="mouseLeaveHotelListing(hotel)" ng-repeat="hotel in hotels | filter:filterHotel | orderBy:sortHotel">
+									<div class="hotel-listing">
+										<div class="img-container">
+											<img class="img-rounded img-responsive img-hotel" ng-src="{{constructPicture(hotel)}}"></img>
+										</div>
+										<p class="lead text-center"><strong><small class="hotel-name">{{ decodeXML(hotel.name) }}</small></strong></p>
+										<p class="text-muted text-center"><small><span ng-if="hotel.hotelRating > 0" ng-repeat="star in range(hotel.hotelRating) track by $index">&#9733;</span><span ng-show="hotel.hotelRating > 0">&nbsp;&#183;&nbsp;</span>{{ hotel.city }}</small></p>
+										<div class="form-group">
+											<a ng-href="{{constructURL(hotel)}}" class="btn btn-block btn-primary btn-add">
+												Book at £{{ hotel.RoomRateDetailsList.RoomRateDetails.RateInfo.ChargeableRateInfo["@averageRate"] | number : 0 }} per night
+											</a>
+										</div>
 									</div>
 								</div>
 							</div>
 							<button class="btn btn-inverse btn-block" ng-show="!selectedHotel" ng-disabled="!moreResultsAvailable" ng-click="loadMore()">Load more</button>
-							<button class="btn btn-inverse btn-block" ng-show="selectedHotel" ng-click="selectedHotel = false">Show all hotels</button>
+							<button class="btn btn-info btn-block" ng-show="selectedHotel" ng-click="selectedHotel = false">Show all hotels</button>
 						</div>
 					</div>
 				</div>
 				<div class="col-md-5 col-xs-12 col-map">
 					<google-map center="map.center" control="map.control" ng-if="mapLoaded || showHotelList" draggable="true" control="map.control" zoom="map.zoom">
-						<markers models="hotels" idKey="'hotelId'" click="'onClicked'" coords="'self'" fit="true">
+						<<markers models="hotels" idKey="'hotelId'" click="'onClicked'" coords="'self'" icon="'icon'" fit="true">
 						</markers>
 					</google-map>
 				</div>

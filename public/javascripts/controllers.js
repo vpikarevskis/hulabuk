@@ -181,14 +181,30 @@ sharikiApp.controller('RoomListCtrl', function($scope, $http, $timeout, $window,
 		blockUI.start();
 
 		$http.get("/data/list?destinationId=" + $scope.cityLocationId + "&arrivalDate=" + arrivalDate + "&departureDate=" + departureDate + "&minStarRating=" + $scope.stars[0] + "&maxStarRating=" + $scope.stars[1] + "&minRate=" + $scope.rates[0] + maxRate + "&order=" + $scope.hotelOrder).success(function(data){
+			if (data.HotelListResponse.EanWsError !== undefined){
+				$scope.moreResultsAvailable = false;
+				$scope.hotels = [];
+				blockUI.stop();
+				$scope.selectedHotel = false;
+				$scope.showHotelList = true;
+				return;
+			}
+
+
 			$scope.moreResultsAvailable = data.HotelListResponse.moreResultsAvailable;
 			$scope.cacheKey = data.HotelListResponse.cacheKey;
 			$scope.cacheLocation = data.HotelListResponse.cacheLocation;
 			$scope.customerSessionId = data.HotelListResponse.customerSessionId;
+
+			if (data.HotelListResponse.HotelList.HotelSummary.length === undefined){
+				data.HotelListResponse.HotelList.HotelSummary = [data.HotelListResponse.HotelList.HotelSummary];
+			}
+
 			angular.forEach(data.HotelListResponse.HotelList.HotelSummary, function(hotel){
 				hotel.onClicked = function(){
 					$scope.selectHotel(hotel);
 				};
+				hotel.icon = 'http://www.googlemapsmarkers.com/v1/!/2ecc71/2ecc71/2ecc71/';
 			});
 			$scope.hotels = data.HotelListResponse.HotelList.HotelSummary;
 			blockUI.stop();
@@ -214,11 +230,18 @@ sharikiApp.controller('RoomListCtrl', function($scope, $http, $timeout, $window,
 			}
 
 			$scope.moreResultsAvailable = data.HotelListResponse.moreResultsAvailable;
+			
+			if (data.HotelListResponse.HotelList.HotelSummary.length === undefined){
+				data.HotelListResponse.HotelList.HotelSummary = [data.HotelListResponse.HotelList.HotelSummary];
+			}
+
 			angular.forEach(data.HotelListResponse.HotelList.HotelSummary, function(hotel){
 				hotel.onClicked = function(){
 					$scope.selectHotel(hotel);
 				};
+				hotel.icon = 'http://www.googlemapsmarkers.com/v1/!/2ecc71/2ecc71/2ecc71/';
 			});
+
 			$scope.hotels = $scope.hotels.concat(data.HotelListResponse.HotelList.HotelSummary);
 
 			if ($scope.moreResultsAvailable)
@@ -237,9 +260,17 @@ sharikiApp.controller('RoomListCtrl', function($scope, $http, $timeout, $window,
 
 	};
 
+	$scope.mouseOverHotelListing = function(hotel) {
+		hotel.icon = 'http://www.googlemapsmarkers.com/v1/!/3498db/3498db/3498db/';
+	};
+
+	$scope.mouseLeaveHotelListing = function(hotel) {
+		hotel.icon = 'http://www.googlemapsmarkers.com/v1/!/2ecc71/2ecc71/2ecc71/';
+	};
+
 	$scope.constructPicture = function(hotel){
-		return "http://images.travelnow.com" + hotel.thumbNailUrl.slice(0, hotel.thumbNailUrl.length - 5) + "l.jpg";
-	}
+		return "http://images.travelnow.com" + hotel.thumbNailUrl.slice(0, hotel.thumbNailUrl.length - 5) + "b.jpg";
+	};
 
 	$scope.constructURL = function(hotel){
 		return "https://www.travelnow.com/templates/459180/hotels/" + hotel.hotelId +
