@@ -13,19 +13,16 @@
 	</head>
 	<body ng-controller="RoomListCtrl">
 		<!-- Navigation -->
-		<nav class="navbar navbar-default" role="navigation">
-			<div class="navbar-header">
-				<button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse-01">
-				<span class="sr-only">Toggle navigation</span>
-				</button>
-				<a class="navbar-brand welcome" href="/">hulabuk</a>
+		<div class="container-fluid navbar-abs">
+				<div class="row">
+					<div class="col-xs-12 col-md-12">
+						<h6>
+							<a class="welcome pull-left" href="/">hulabuk</a>
+							<a class="btn btn-default pull-right" href="/about">about</a>
+						</h6>
+					</div>
+				</div>
 			</div>
-			<div class="collapse navbar-collapse" id="navbar-collapse-01">
-				<ul class="nav navbar-nav navbar-right">
-					<li class="active"><a href="/about">about</a></li>
-				</ul>
-			</div>
-		</nav>
 
 		<!-- Content -->
 		<div class="container">

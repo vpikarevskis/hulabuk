@@ -1,102 +1,24 @@
-var sharikiApp = angular.module('sharikiApp', ['ui.bootstrap', 'ui.slider', 'dateRangePicker', 'google-maps', 'blockUI']);
+var sharikiApp = angular.module('sharikiApp', ['ui.slider', 'dateRangePicker', 'google-maps', 'blockUI']);
 
-sharikiApp.config(function(blockUIConfigProvider){
-	blockUIConfigProvider.message("Loading best rates...");
+sharikiApp.config(function(	blockUIConfigProvider){
+	blockUIConfigProvider.autoBlock(false);
 	blockUIConfigProvider.delay(1);
 });
 
-sharikiApp.directive("resize", function ($window) {
-	return function (scope, element) {
-		var w = angular.element($window);
-		scope.$watch(function () {
-			return { "h": w.height(), "w": w.width() };
-		}, function (newValue, oldValue) {
-		}, true);
-
-		angular.element(".hotel-list").height(angular.element(".hotel-list").parent().height() - angular.element(".filters").height());
-
-		w.bind("resize", function () {
-			scope.$apply();
-		});
-	}
-});
-
-sharikiApp.controller('FeedbackCtrl', function($scope, $http) {
-	$scope.feedbackSuccess = true;
-	$scope.feedbackMessage = null;
-
-	$scope.submitAttempted = false;
-
-	$scope.submissionConfig = new Object();
-	$scope.submissionConfig.method = "POST";
-	$scope.submissionConfig.url = "/data/feedback";
-	$scope.submissionConfig.responseType = "json";
-	
-	$scope.stars = [1, 1, 1, 1, 0];
-	$scope.starsSum = 4;
-
-	$scope.updateStars = function(index){
-		$scope.starsSum = 0;
-		for (var i = 0; i < $scope.stars.length; i++)
-		{
-			if (i <= index)
-			{
-				$scope.stars[i] = 1;
-				$scope.starsSum += 1;
-			}
-			else
-			{
-				$scope.stars[i] = 0;
-			}
-
-		}
-	}
-
-	$scope.submitFeedback = function(){
-
-		$scope.submitAttempted = true;
-		if ($scope.feedbackForm.email.$invalid)
-		{
-			return;
-		}
-
-		var stars = 0;
-
-		$scope.submissionConfig.data = JSON.stringify({
-			email: $scope.fromEmail,
-			stars: $scope.starsSum,
-			features: $scope.features,
-			good: $scope.good,
-			better: $scope.better
-		});
-
-		$http($scope.submissionConfig).success(function(data, status){
-			$scope.feedbackSuccess = true;
-			$scope.feedbackMessage = "Your feedback has been sent!"
-		}).error(function(data, status){
-			$scope.feedbackSuccess = false;
-			$scope.feedbackMessage = "Sorry, failure occured.";
-
-		});
-	};
-
-	$scope.range = function(num) {
-    	return new Array(num);   	
-	};
-
-});
-
-
-sharikiApp.controller('RoomListCtrl', function($scope, $http, $timeout, $window, $log, blockUI){
+sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout, $window, $q, blockUI){
 	$window.viewportUnitsBuggyfill.init();
 
 	$scope.cityLocationId = '9B0681E3-6D9F-47E8-8E14-5389F83569DD';
 	$scope.locationData = {
 		'9B0681E3-6D9F-47E8-8E14-5389F83569DD': {'country': 'FR', 'city': 'Paris'},
 		'CA62CF56-3490-467B-B531-99D1956120C4': {'country': 'IT', 'city': 'Rome'}};
+
+	$scope.markers = [];
+	$scope.hiddenHotels = [];
+	$scope.regionColors = [{color: '#27ae60', width: 0, opacity: 0.5}, {color: '#2ecc71', width: 0, opacity: 0.5}, {color: '#f1c40f', width: 0, opacity: 0.5}, {color: '#f39c12', width: 0, opacity: 0.5}, {color: '#e67e22', width: 0, opacity: 0.5}, {color: '#d35400', width: 0, opacity: 0.5}, {color: '#e74c3c', width: 0, opacity: 0.5}, {color: '#c0392b', width: 0, opacity: 0.5}];
+	$scope.icons = ['/images/markers/marker-nephritis.png', '/images/markers/marker-emerald.png', '/images/markers/marker-sunflower.png', '/images/markers/marker-orange.png', '/images/markers/marker-carrot.png', '/images/markers/marker-pumpkin.png', '/images/markers/marker-alizarin.png', '/images/markers/marker-pomegranate.png'];
 	$scope.stars = [0, 5];
 	$scope.rates = [0, 500];
-	$scope.hotelOrder = "PRICE";
 	$scope.sliderChangeCount = 0;
 	$scope.showHotelList = false;
 	$scope.selectedHotel = false;
@@ -106,9 +28,10 @@ sharikiApp.controller('RoomListCtrl', function($scope, $http, $timeout, $window,
 	        latitude: 45,
 	        longitude: -73
 	    },
-	    zoom: 8,
+	    zoom: 12,
 	    draggable: true,
-	    control: {}
+	    control: {},
+	    options: {mapTypeControl: false, streetViewControl: false},
 	};
 
 	$scope.starSliderOptions = {
@@ -128,8 +51,75 @@ sharikiApp.controller('RoomListCtrl', function($scope, $http, $timeout, $window,
 	$scope.sliderChange = function(){
 		$scope.sliderChangeCount++;
 		if ($scope.sliderChangeCount > 8){
+
+			if ($scope.blocking){
+				$scope.canceller.resolve();
+				$scope.blocking = false;
+			}
+			
+			$scope.blocking = true;
 			$scope.seeHotels();
 		}
+	};
+
+	$scope.loadMarkers = function(region){
+		$http.get('/data/regional-list?region=' + region.region_id + '&arrivalDate=' + $scope.selectedRange.start.format("YYYY-MM-DD") + '&departureDate=' + $scope.selectedRange.end.format("YYYY-MM-DD")).success(function(data){
+			angular.forEach(data.result, function(marker, index){
+				if (marker.hotel_id in $scope.hotelsById){
+					data.result[index] = $scope.hotelsById[marker.hotel_id];
+				} else {
+					marker.average = parseFloat(marker.average);
+					marker.stars = new Array(parseInt(marker.stars));
+				}
+			});
+
+			var newMarkers = $scope.markers.concat(data.result);
+			newMarkers.sort(function(firstMarker, secondMarker){
+				if (firstMarker.average < secondMarker.average){
+					return -1;
+				} else if (firstMarker.average > secondMarker.average) {
+					return 1;
+				}
+				return 0;
+			});
+			var cutOffNumber = Math.floor(newMarkers.length * 0.05);
+			var minRate = newMarkers[cutOffNumber].average;
+			var maxRate = newMarkers[newMarkers.length - cutOffNumber - 1].average;
+			var rateStep = (maxRate - minRate) / 8;
+			console.log(newMarkers);
+			console.log(newMarkers.length);
+			console.log(cutOffNumber);
+			console.log(minRate);
+			console.log(maxRate);
+			console.log(rateStep);
+
+			angular.forEach(data.result, function(marker){
+				marker.onClicked = function(){
+					$scope.selectHotel(marker);
+				};
+				var buc = Math.floor((marker.average - minRate) / rateStep);
+
+				if (buc >= 8){
+					buc = 7;
+				} else if (buc < 0) {
+					buc = 0;
+				}
+				marker.icon = $scope.icons[buc];
+			});
+
+			angular.forEach($scope.markers, function(marker){
+				var buc = Math.floor((marker.average - minRate) / rateStep);
+				if (buc >= 8){
+					buc = 7;
+				} else if (buc < 0) {
+					buc = 0;
+				}
+				marker.icon = $scope.icons[buc];
+			});
+
+			region.hide = true;
+			$scope.markers = newMarkers;
+		});
 	};
 
 	$scope.loadCalendar = function(){
@@ -155,18 +145,11 @@ sharikiApp.controller('RoomListCtrl', function($scope, $http, $timeout, $window,
 				average.buc = Math.floor((average.average - minRate) / rateStep);
 			});
 
-			$scope.minRate = minRate;
-			$scope.rateStep = rateStep;
 			$scope.calendarAverages = calendarAverages;
 		});
 	};
 
 	$scope.loadCalendar();
-
-	$scope.selectHotel = function(hotel){
-		$scope.selectedHotel = hotel;
-		$scope.$apply();
-	};
 
 	$scope.seeHotels = function(){
 		if ($scope.selectedRange === undefined)
@@ -174,40 +157,117 @@ sharikiApp.controller('RoomListCtrl', function($scope, $http, $timeout, $window,
 			return;
 		}
 
-		var arrivalDate = $scope.selectedRange.start.format("MM/DD/YYYY");
-		var departureDate = $scope.selectedRange.end.format("MM/DD/YYYY");
+		var arrivalDate = $scope.selectedRange.start.format("YYYY-MM-DD");
+		var departureDate = $scope.selectedRange.end.format("YYYY-MM-DD");
 		var maxRate = $scope.rates[1] == 500 ? "" : "&maxRate=" + $scope.rates[1];
+		var jumbotronBlock = blockUI.instances.get('jumbotronBlock');
 
-		blockUI.start();
+		if (!$scope.blocking){
+			jumbotronBlock.start("Getting best hotels for you...");
+		}
+		
+		$scope.canceller = $q.defer();
+		$scope.hotelsById = {};
+		
+		if ($scope.lastLocation != $scope.cityLocationId){
+			$scope.lastLocation = $scope.cityLocationId;
+			$http.get("/data/regions?country=" + $scope.locationData[$scope.cityLocationId].country + "&city=" + $scope.locationData[$scope.cityLocationId].city + "&arrivalDate=" + arrivalDate + "&departureDate=" + departureDate).success(function(dataRegions){
+				var minRegionRate = Number.MAX_VALUE;
+				var maxRegionRate = 0;
+				var latitude = 0;
+				var longitude = 0;
+				var coordCount = 0;
+				angular.forEach(dataRegions.result, function(region){
+					if (minRegionRate > region.average){
+						minRegionRate = region.average;
+					}
+					if (maxRegionRate < region.average){
+						maxRegionRate = region.average;
+					}
+					var coordinatesString = region.coordinates.split(":");
+					var coordinates = new Array(coordinatesString.length);
+					angular.forEach(coordinatesString, function(coordinatesPair, index){
+						var ll = coordinatesPair.split(";");
+						coordinates[index] = {latitude: ll[0], longitude: ll[1]};
+						latitude += parseFloat(ll[0]);
+						longitude += parseFloat(ll[1]);
+						coordCount++;
+					});
+					region.coordinates = coordinates;
+				});
+				latitude /= coordCount;
+				longitude /= coordCount;
+				$scope.map.center = {latitude: latitude, longitude: longitude};
 
-		$http.get("/data/list?destinationId=" + $scope.cityLocationId + "&arrivalDate=" + arrivalDate + "&departureDate=" + departureDate + "&minStarRating=" + $scope.stars[0] + "&maxStarRating=" + $scope.stars[1] + "&minRate=" + $scope.rates[0] + maxRate + "&order=" + $scope.hotelOrder).success(function(data){
-			if (data.HotelListResponse.EanWsError !== undefined){
-				$scope.moreResultsAvailable = false;
-				$scope.hotels = [];
-				blockUI.stop();
-				$scope.selectedHotel = false;
-				$scope.showHotelList = true;
-				return;
-			}
+				var rateStep = (maxRegionRate - minRegionRate) / 8;
+				angular.forEach(dataRegions.result, function(region){
+					var buc = Math.floor((region.average - minRegionRate) / rateStep);
+					if (buc == 8){
+						buc = 7;
+					}
+					region.coloring = $scope.regionColors[buc];
+					region.hide = false;
+					region.onClicked = function(){
+						$scope.loadMarkers(region);
+					};
+				});
 
-
-			$scope.moreResultsAvailable = data.HotelListResponse.moreResultsAvailable;
-			$scope.cacheKey = data.HotelListResponse.cacheKey;
-			$scope.cacheLocation = data.HotelListResponse.cacheLocation;
-			$scope.customerSessionId = data.HotelListResponse.customerSessionId;
-
-			if (data.HotelListResponse.HotelList.HotelSummary.length === undefined){
-				data.HotelListResponse.HotelList.HotelSummary = [data.HotelListResponse.HotelList.HotelSummary];
-			}
-
-			angular.forEach(data.HotelListResponse.HotelList.HotelSummary, function(hotel){
-				hotel.onClicked = function(){
-					$scope.selectHotel(hotel);
-				};
-				hotel.icon = 'http://www.googlemapsmarkers.com/v1/!/2ecc71/2ecc71/2ecc71/';
+				$scope.regions = dataRegions.result;
 			});
-			$scope.hotels = data.HotelListResponse.HotelList.HotelSummary;
-			blockUI.stop();
+		} else { 
+			angular.forEach($scope.regions, function(region){
+				region.hide = false;
+			});
+		}
+
+		$http.get("/data/list?country=" + $scope.locationData[$scope.cityLocationId].country + "&city=" + $scope.locationData[$scope.cityLocationId].city + "&arrivalDate=" + arrivalDate + "&departureDate=" + departureDate + "&minStarRating=" + $scope.stars[0] + "&maxStarRating=" + $scope.stars[1] + "&minRate=" + $scope.rates[0] + maxRate, {timeout: $scope.canceller ? $scope.canceller.promise : undefined}).success(function(data){
+			$scope.hotelIdList = "";
+			angular.forEach(data.result, function(hotel, index){
+				hotel.icon = '/images/markers/marker-green.png';
+				hotel.stars = new Array(parseInt(hotel.stars));
+				hotel.bookingUrl = "";
+				hotel.loading = true;
+				$scope.hotelsById[hotel.hotel_id] = hotel;
+				$scope.hotelIdList += hotel.hotel_id;
+				if (index < data.result.length - 1){
+					$scope.hotelIdList += ",";
+				}
+			});
+			$scope.hotels = data.result;
+
+			if ($scope.hotels.length  > 0){
+				var sessionId = $scope.customerSessionId === undefined ? "" : "&customerSessionId=" + $scope.customerSessionId;
+				$http.get("/data/pricing?arrivalDate=" + $scope.selectedRange.start.format("MM/DD/YYYY") + "&departureDate=" + $scope.selectedRange.end.format("MM/DD/YYYY") + "&hotelIdList=" + $scope.hotelIdList + sessionId, {timeout: $scope.canceller ? $scope.canceller.promise : undefined}).success(function(dataPricing){
+					if (dataPricing.HotelListResponse.EanWsError === undefined){
+						if (dataPricing.HotelListResponse.HotelList.HotelSummary.length === undefined){
+							dataPricing.HotelListResponse.HotelList.HotelSummary = [dataPricing.HotelListResponse.HotelList.HotelSummary];
+						}
+						angular.forEach(dataPricing.HotelListResponse.HotelList.HotelSummary, function(hotel){
+							$scope.hotelsById[hotel.hotelId].bookingUrl = $scope.constructUrl($scope.hotelsById[hotel.hotelId], hotel.RoomRateDetailsList, hotel.supplierType);
+							$scope.hotelsById[hotel.hotelId].average = hotel.RoomRateDetailsList.RoomRateDetails.RateInfo.ChargeableRateInfo["@averageRate"];
+							$scope.hotelsById[hotel.hotelId].priceUpdated = true;
+						});
+					}
+
+					angular.forEach(data.result, function(hotel){
+						hotel.loading = false;
+						hotel.loaded = true;
+					});
+					$scope.customerSessionId = dataPricing.HotelListResponse.customerSessionId;
+				});
+			}
+
+			if ($scope.blocking){
+				$scope.blocking = false;
+			}
+
+			if (jumbotronBlock.state().blockCount > 0){
+				jumbotronBlock.stop();
+			}
+
+			$scope.markers = [];
+			$scope.moreResultsAvailable = $scope.hotels.length > 0;
+			$scope.page = data.page;
 			$scope.selectedHotel = false;
 			$scope.showHotelList = true;
 			$scope.mapLoaded = true;
@@ -220,93 +280,139 @@ sharikiApp.controller('RoomListCtrl', function($scope, $http, $timeout, $window,
 			return;
 		}
 
-		blockUI.start();
+		var arrivalDate = $scope.selectedRange.start.format("YYYY-MM-DD");
+		var departureDate = $scope.selectedRange.end.format("YYYY-MM-DD");
+		var maxRate = $scope.rates[1] == 500 ? "" : "&maxRate=" + $scope.rates[1];
+
+		$scope.blocking = true;
+		$scope.canceller = $q.defer();
 		
-		$http.get("/data/page?cacheKey=" + $scope.cacheKey + "&cacheLocation=" + $scope.cacheLocation + "&customerSessionId=" + $scope.customerSessionId).success(function(data){
-			if (data.HotelListResponse.EanWsError !== undefined){
-				$scope.moreResultsAvailable = false;
-				blockUI.stop();
+		$http.get("/data/list?country=" + $scope.locationData[$scope.cityLocationId].country + "&city=" + $scope.locationData[$scope.cityLocationId].city + "&arrivalDate=" + arrivalDate + "&departureDate=" + departureDate + "&minStarRating=" + $scope.stars[0] + "&maxStarRating=" + $scope.stars[1] + "&minRate=" + $scope.rates[0] + "&page=" + ($scope.page + 1) + maxRate , {timeout: $scope.canceller.promise}).success(function(data){
+
+			$scope.moreResultsAvailable = data.result.length > 0;
+			if (!$scope.moreResultsAvailable){
+				$scope.blocking = false;
 				return;
 			}
 
-			$scope.moreResultsAvailable = data.HotelListResponse.moreResultsAvailable;
-			
-			if (data.HotelListResponse.HotelList.HotelSummary.length === undefined){
-				data.HotelListResponse.HotelList.HotelSummary = [data.HotelListResponse.HotelList.HotelSummary];
-			}
+			$scope.hotelIdList = "";
 
-			angular.forEach(data.HotelListResponse.HotelList.HotelSummary, function(hotel){
-				hotel.onClicked = function(){
-					$scope.selectHotel(hotel);
-				};
+			angular.forEach(data.result, function(hotel, index){
 				hotel.icon = '/images/markers/marker-green.png';
+				hotel.stars = new Array(hotel.stars);
+				hotel.bookingUrl = "";
+				$scope.loading = true;
+				$scope.hotelsById[hotel.hotel_id] = hotel;
+				$scope.hotelIdList += hotel.hotel_id;
+				if (index < data.result.length - 1){
+					$scope.hotelIdList += ",";
+				}
 			});
+			$scope.hotels = $scope.hotels.concat(data.result);
+			var sessionId = "&customerSessionId=" + $scope.customerSessionId;
+			$http.get("/data/pricing?arrivalDate=" + $scope.selectedRange.start.format("MM/DD/YYYY") + "&departureDate=" + $scope.selectedRange.end.format("MM/DD/YYYY") + "&hotelIdList=" + $scope.hotelIdList + sessionId, {timeout: $scope.canceller ? $scope.canceller.promise : undefined}).success(function(dataPricing){
+					if (dataPricing.HotelListResponse.EanWsError === undefined){
+						if (dataPricing.HotelListResponse.HotelList.HotelSummary.length === undefined){
+							dataPricing.HotelListResponse.HotelList.HotelSummary = [dataPricing.HotelListResponse.HotelList.HotelSummary];
+						}
+						angular.forEach(dataPricing.HotelListResponse.HotelList.HotelSummary, function(hotel){
+							$scope.hotelsById[hotel.hotelId].bookingUrl = $scope.constructUrl($scope.hotelsById[hotel.hotelId], hotel.RoomRateDetailsList, hotel.supplierType);
+							$scope.hotelsById[hotel.hotelId].average = hotel.RoomRateDetailsList.RoomRateDetails.RateInfo.ChargeableRateInfo["@averageRate"];
+							$scope.hotelsById[hotel.hotelId].priceUpdated = true;
+						});
+					}
 
-			$scope.hotels = $scope.hotels.concat(data.HotelListResponse.HotelList.HotelSummary);
+					angular.forEach(data.result, function(hotel){
+						hotel.loading = false;
+						hotel.loaded = true;
+					});
+				});
 
-			if ($scope.moreResultsAvailable)
-			{
-				$scope.cacheKey = data.HotelListResponse.cacheKey;
-				$scope.cacheLocation = data.HotelListResponse.cacheLocation;
-			}
-			else
-			{
-				delete $scope.cacheKey;
-				delete $scope.cacheLocation;
-			}
-
-			blockUI.stop();
+			$scope.page = data.page;
+			$scope.blocking = false;
 		});
 
 	};
 
+	$scope.resetMap = function(){
+		$scope.minRate = Number.MAX_VALUE;
+		$scope.maxRate = 0;
+		$scope.markers = [];
+		angular.forEach($scope.regions, function(region){
+			region.hide = false;
+		});
+	};
+
 	$scope.mouseOverHotelListing = function(hotel) {
+		hotel.old_icon = hotel.icon;
 		hotel.icon = '/images/markers/marker-blue.png';
 	};
 
 	$scope.mouseLeaveHotelListing = function(hotel) {
-		hotel.icon = '/images/markers/marker-green.png';
+		hotel.icon = hotel.old_icon;
 	};
 
-	$scope.constructPicture = function(hotel){
-		return "http://images.travelnow.com" + hotel.thumbNailUrl.slice(0, hotel.thumbNailUrl.length - 5) + "b.jpg";
+	$scope.constructUrl = function(hotel, RoomRateDetailsList, supplierType){
+		return "https://www.travelnow.com/templates/459180/hotels/" + hotel.hotel_id +
+			"/book?lang=en" +
+			"&currency=GBP" +
+			"&standardCheckin=" + $scope.selectedRange.start.format("MM/DD/YYYY") +
+			"&standardCheckout=" + $scope.selectedRange.end.format("MM/DD/YYYY") +
+			"&roomsCount=1" +
+			"&rooms[0].adultsCount=" + RoomRateDetailsList.RoomRateDetails.quotedRoomOccupancy +
+			"&rooms[0].childrenCount=0" +
+			"&hotelId=" + hotel.hotel_id +
+			"&rateCode=" + RoomRateDetailsList.RoomRateDetails.rateCode +
+			"&roomTypeCode=" + RoomRateDetailsList.RoomRateDetails.roomTypeCode + 
+			"&rateKey=" + RoomRateDetailsList.RoomRateDetails.rateKey +
+			"&selectedPrice=" + RoomRateDetailsList.RoomRateDetails.RateInfo.ChargeableRateInfo["@total"] +
+			"&supplierType=" + supplierType;
 	};
 
-	$scope.constructURL = function(hotel){
-		return "https://www.travelnow.com/templates/459180/hotels/" + hotel.hotelId +
-				"/book?lang=en" +
-				"&currency=GBP" +
-				"&standardCheckin=" + $scope.selectedRange.start.format("MM/DD/YYYY") +
-				"&standardCheckout=" + $scope.selectedRange.end.format("MM/DD/YYYY") +
-				"&roomsCount=1" +
-				"&rooms[0].adultsCount=" + hotel.RoomRateDetailsList.RoomRateDetails.quotedRoomOccupancy +
-				"&rooms[0].childrenCount=0" +
-				"&hotelId=" + hotel.hotelId +
-				"&rateCode=" + hotel.RoomRateDetailsList.RoomRateDetails.rateCode +
-				"&roomTypeCode=" + hotel.RoomRateDetailsList.RoomRateDetails.roomTypeCode + 
-				"&rateKey=" + hotel.RoomRateDetailsList.RoomRateDetails.rateKey +
-				"&selectedPrice=" + hotel.RoomRateDetailsList.RoomRateDetails.RateInfo.ChargeableRateInfo["@total"] +
-				"&supplierType=" + hotel.supplierType;
+	$scope.unSelectHotel = function(){
+		$scope.hotels = $scope.hiddenHotels;
+		$scope.selectedHotel = false;
 	};
 
-	$scope.filterHotel = function(hotel){
-		return !$scope.selectedHotel ? true : hotel.hotelId === $scope.selectedHotel.hotelId;
-	};
+	$scope.selectHotel = function(hotel){
+		hotel.bookingUrl = "";
+		$scope.hotelIdList = hotel.hotel_id;
+		$scope.canceller = $q.defer();
+		var sessionId = "&customerSessionId=" + $scope.customerSessionId;
+		if (!$scope.selectedHotel){
+			$scope.hiddenHotels = $scope.hotels;
+		}
 
-	$scope.sortHotel = function(hotel){
-		return hotel.RoomRateDetailsList.RoomRateDetails.RateInfo.ChargeableRateInfo["@averageRate"];
-	};
-
-	$scope.decodeXML = function(string){
-		return string.replace(/&apos;/g, "'")
-		.replace(/&quot;/g, '"')
-		.replace(/&gt;/g, '>')
-		.replace(/&lt;/g, '<')
-		.replace(/&amp;/g, '&');
+		$scope.hotels = [hotel];
+		$scope.selectedHotel = true;
+		$scope.$apply();
+		if (hotel.priceUpdated){
+			return;
+		}
+		hotel.loading = true;
+		$http.get("/data/pricing?arrivalDate=" + $scope.selectedRange.start.format("MM/DD/YYYY") + "&departureDate=" + $scope.selectedRange.end.format("MM/DD/YYYY") + "&hotelIdList=" + $scope.hotelIdList + sessionId, {timeout: $scope.canceller ? $scope.canceller.promise : undefined}).success(function(dataPricing){
+			if (dataPricing.HotelListResponse.EanWsError === undefined){
+				if (dataPricing.HotelListResponse.HotelList.HotelSummary.length === undefined){
+					dataPricing.HotelListResponse.HotelList.HotelSummary = [dataPricing.HotelListResponse.HotelList.HotelSummary];
+				}
+				angular.forEach(dataPricing.HotelListResponse.HotelList.HotelSummary, function(hotel){
+					$scope.hotels[0].bookingUrl = $scope.constructUrl($scope.hotels[0], hotel.RoomRateDetailsList, hotel.supplierType);
+					$scope.hotels[0].average = hotel.RoomRateDetailsList.RoomRateDetails.RateInfo.ChargeableRateInfo["@averageRate"];
+					$scope.hotels[0].priceUpdated = true;
+				});
+			}
+			$scope.hotels[0].loading = false;
+			$scope.hotels[0].loaded = true;
+		});
 	};
 
 	$scope.edit = function(){
+		if ($scope.blocking){
+			$scope.blocking = false;
+			$scope.canceller.resolve();
+		}
 		$scope.showHotelList = false;
+		$scope.hotels = [];
 	};
 
 	$scope.setLocation = function(locationId)
@@ -314,10 +420,4 @@ sharikiApp.controller('RoomListCtrl', function($scope, $http, $timeout, $window,
 		$scope.cityLocationId = locationId;
 		$scope.loadCalendar();
 	};
-
-	$scope.range = function(num) {
-    	return new Array(num);   	
-	};
-
-	$scope.controllerLoaded = true;
 });

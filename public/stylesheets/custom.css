@@ -6,26 +6,70 @@ html, body {
 	height: 100%;
 }
 
+@media only screen and (min-width:992px) {
+	.container-fluid.first-container {
+		background-image: url('../images/covers/houses.jpg');
+	}
+
+	.container-fluid.calendar-container {
+    	background-image: url('../images/covers/balloon.jpg');
+	}
+}
+
 .welcome {
 	font-family: 'Molle' !important;
 	font-style: italic;
 	font-weight: 400;
+	color: #fff;
+	width: 100px;
+	height: 100px;
+	background-color: #2ecc71;
+	border-radius: 50px;
+	line-height: 100px;
+	text-align: center;
+	font-size: 20px;
+}
+.welcome:hover {
+	color: #fff;
 }
 
 .btn-group>.btn:hover, .btn-group-vertical>.btn:hover, .btn-group>.btn:focus, .btn-group-vertical>.btn:focus, .btn-group>.btn:active, .btn-group-vertical>.btn:active, .btn-group>.btn.active, .btn-group-vertical>.btn.active{
 	z-index: 0;
 }
 
-.container-fluid.first-container {
+.btn-map-clear {
+	position: absolute;
+	right: 15px;
+	z-index: 1;
+}
+
+.container-fluid.first-container,
+.container-fluid.info-container, 
+.container-fluid.calendar-container, 
+.container-fluid.signup-container {
     display: table;
     width: 100%;
     height: 100vh;
     background-color: #34495E;
-    background-image: url('https://s3.amazonaws.com/ooomf-com-files/yvDPJ8ZSmSVob7pRxIvU_IMG_40322.jpg');
     background-size: cover;
 }
 
-.container-fluid.first-container > div{
+.container-fluid.first-container {
+	background-color: #2C3E50;
+}
+
+.container-fluid.info-container {
+    background-color: #ffffff;
+}
+
+.container-fluid.calendar-container {
+	background-color: #E67E22;
+}
+
+.container-fluid.first-container > div,
+.container-fluid.info-container > div,
+.container-fluid.calendar-container > div,
+.container-fluid.signup-container > div{
 	display: table-cell;
 	vertical-align: middle;
 }
@@ -83,8 +127,8 @@ html, body {
 .navbar-abs {
 	position: absolute;
 	width: 100%;
-	z-index: 3;
 	margin-bottom: 0px;
+	z-index:1;
 }
 
 .no-top-margin {
@@ -121,12 +165,13 @@ body > .dropdown-menu {
 }
 
 .angular-date-range-picker__calendar-day-unavailable {
-	color: #ECF0F1;
+	color: #bdc3c7;
 }
 
 .table>thead>tr>th, .table>tbody>tr>th, .table>tfoot>tr>th, .table>thead>tr>td, .table>tbody>tr>td, .table>tfoot>tr>td {
 	border: 2px solid #f5f5f5;
 	vertical-align: middle;
+	padding: 8px;
 }
 
 .table {
@@ -144,10 +189,13 @@ body > .dropdown-menu {
 	min-height: 200px;
 }
 
-.well {
+.well-opacity {
+	opacity: 0.9;
+}
+
+.well-hulabuk {
 	border-radius: 6px;
 	border: none;
-	opacity: 0.9;
 }
 
 .jumbotron {
@@ -183,6 +231,7 @@ hr {
 }
 
 .hotel-list {
+	height: 80vh;
 	overflow-y: scroll;
 }
 
@@ -316,7 +365,11 @@ hr {
 	display: block;
 }
 
-.img-hotel {
+.img-logo {
+	width: 100%;
+}
+
+.img-aspect-ratio {
 	position: absolute;
 	margin: 0 auto;
 	max-width: 100%;
@@ -325,4 +378,46 @@ hr {
 	left: 0;
 	right: 0;
 	bottom: 0;
+}
+
+.block-ui-overlay.block-ui-visible {
+	border-radius: 6px;
+}
+
+.filters {
+	height: 20vh;
+	border-bottom: 2px solid #ECF0F1;
+}
+
+.top-margin {
+	margin-top: 15vh;
+}
+
+.three-quarters.three-quarters-white {
+	border-color: #ffffff;
+	border-right-color: transparent;
+}
+
+.white-text {
+	color: #ecf0f1;
+}
+
+.grey-text {
+	color: #bdc3c7;
+}
+
+span.glyphicon-flash {
+    font-size: 5em;
+}
+
+span.glyphicon-heart {
+    font-size: 5em;
+}
+
+span.glyphicon-eye-open {
+    font-size: 5em;
+}
+
+.ignore-margin {
+	margin: 0px;
 }

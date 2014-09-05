@@ -2,3 +2,4 @@ node_modules
 Icon
 *.dropbox
 *.log
+*.DS_Store

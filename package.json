@@ -20,6 +20,7 @@
     "coupon-code": "~0.3.0",
     "moment": "~2.7.0",
     "pg": "~3.4.0",
-    "pg-types": "~1.4.0"
+    "pg-types": "~1.4.0",
+    "validator": "~3.17.1"
   }
 }
