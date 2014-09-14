@@ -15,7 +15,7 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 
 	$scope.markers = [];
 	$scope.hiddenHotels = [];
-	$scope.regionColors = [{color: '#27ae60', width: 0, opacity: 0.5}, {color: '#2ecc71', width: 0, opacity: 0.5}, {color: '#f1c40f', width: 0, opacity: 0.5}, {color: '#f39c12', width: 0, opacity: 0.5}, {color: '#e67e22', width: 0, opacity: 0.5}, {color: '#d35400', width: 0, opacity: 0.5}, {color: '#e74c3c', width: 0, opacity: 0.5}, {color: '#c0392b', width: 0, opacity: 0.5}];
+	$scope.regionColors = ['#27ae60', '#2ecc71', '#f1c40f', '#f39c12', '#e67e22', '#d35400', '#e74c3c', '#c0392b'];
 	$scope.icons = ['/images/markers/marker-nephritis.png', '/images/markers/marker-emerald.png', '/images/markers/marker-sunflower.png', '/images/markers/marker-orange.png', '/images/markers/marker-carrot.png', '/images/markers/marker-pumpkin.png', '/images/markers/marker-alizarin.png', '/images/markers/marker-pomegranate.png'];
 	$scope.stars = [0, 5];
 	$scope.rates = [0, 500];
@@ -63,7 +63,10 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 	};
 
 	$scope.loadMarkers = function(region){
-		$http.get('/data/regional-list?region=' + region.region_id + '&arrivalDate=' + $scope.selectedRange.start.format("YYYY-MM-DD") + '&departureDate=' + $scope.selectedRange.end.format("YYYY-MM-DD")).success(function(data){
+		var arrivalDate = $scope.selectedRange.start.format("YYYY-MM-DD");
+		var departureDate = $scope.selectedRange.end.format("YYYY-MM-DD");
+		var maxRateLimit = $scope.rates[1] == 500 ? "" : "&maxRate=" + $scope.rates[1];
+		$http.get('/data/regional-list?region=' + region.region_id + '&arrivalDate=' + arrivalDate + '&departureDate=' + departureDate + '&minStarRating=' + $scope.stars[0] + '&maxStarRating=' + $scope.stars[1] + '&minRate=' + $scope.rates[0] + maxRateLimit).success(function(data){
 			angular.forEach(data.result, function(marker, index){
 				if (marker.hotel_id in $scope.hotelsById){
 					data.result[index] = $scope.hotelsById[marker.hotel_id];
@@ -82,16 +85,15 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 				}
 				return 0;
 			});
-			var cutOffNumber = Math.floor(newMarkers.length * 0.05);
-			var minRate = newMarkers[cutOffNumber].average;
-			var maxRate = newMarkers[newMarkers.length - cutOffNumber - 1].average;
-			var rateStep = (maxRate - minRate) / 8;
-			console.log(newMarkers);
-			console.log(newMarkers.length);
-			console.log(cutOffNumber);
-			console.log(minRate);
-			console.log(maxRate);
-			console.log(rateStep);
+			if (newMarkers.length > 0){
+				var cutOffNumber = Math.floor(newMarkers.length * 0.05);
+				var minRate = newMarkers[cutOffNumber].average;
+				var maxRate = newMarkers[newMarkers.length - cutOffNumber - 1].average;
+				var rateStep = (maxRate - minRate) / 8;
+				if (rateStep == 0){
+					rateStep = 1;
+				}
+			}
 
 			angular.forEach(data.result, function(marker){
 				marker.onClicked = function(){
@@ -105,6 +107,7 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 					buc = 0;
 				}
 				marker.icon = $scope.icons[buc];
+				marker.shown = true;
 			});
 
 			angular.forEach($scope.markers, function(marker){
@@ -205,7 +208,7 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 					if (buc == 8){
 						buc = 7;
 					}
-					region.coloring = $scope.regionColors[buc];
+					region.coloring = {color: $scope.regionColors[buc], width: 0, opacity: 0.5};
 					region.hide = false;
 					region.onClicked = function(){
 						$scope.loadMarkers(region);
@@ -223,8 +226,9 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 		$http.get("/data/list?country=" + $scope.locationData[$scope.cityLocationId].country + "&city=" + $scope.locationData[$scope.cityLocationId].city + "&arrivalDate=" + arrivalDate + "&departureDate=" + departureDate + "&minStarRating=" + $scope.stars[0] + "&maxStarRating=" + $scope.stars[1] + "&minRate=" + $scope.rates[0] + maxRate, {timeout: $scope.canceller ? $scope.canceller.promise : undefined}).success(function(data){
 			$scope.hotelIdList = "";
 			angular.forEach(data.result, function(hotel, index){
-				hotel.icon = '/images/markers/marker-green.png';
+				hotel.icon = '/images/markers/marker-blue.png';
 				hotel.stars = new Array(parseInt(hotel.stars));
+				hotel.shown = false;
 				hotel.bookingUrl = "";
 				hotel.loading = true;
 				$scope.hotelsById[hotel.hotel_id] = hotel;
@@ -298,8 +302,9 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 			$scope.hotelIdList = "";
 
 			angular.forEach(data.result, function(hotel, index){
-				hotel.icon = '/images/markers/marker-green.png';
+				hotel.icon = '/images/markers/marker-blue.png';
 				hotel.stars = new Array(hotel.stars);
+				hotel.shown = false;
 				hotel.bookingUrl = "";
 				$scope.loading = true;
 				$scope.hotelsById[hotel.hotel_id] = hotel;
@@ -337,6 +342,9 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 	$scope.resetMap = function(){
 		$scope.minRate = Number.MAX_VALUE;
 		$scope.maxRate = 0;
+		angular.forEach($scope.markers, function(marker){
+			marker.shown = false;
+		});
 		$scope.markers = [];
 		angular.forEach($scope.regions, function(region){
 			region.hide = false;
@@ -346,10 +354,17 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 	$scope.mouseOverHotelListing = function(hotel) {
 		hotel.old_icon = hotel.icon;
 		hotel.icon = '/images/markers/marker-blue.png';
+		console.log(hotel);
+		if (!hotel.shown){
+			$scope.markers.push(hotel);
+		}
 	};
 
 	$scope.mouseLeaveHotelListing = function(hotel) {
 		hotel.icon = hotel.old_icon;
+		if (!hotel.shown){
+			$scope.markers.splice($scope.markers.indexOf(hotel));
+		}
 	};
 
 	$scope.constructUrl = function(hotel, RoomRateDetailsList, supplierType){

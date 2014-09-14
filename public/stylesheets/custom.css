@@ -66,11 +66,10 @@ html, body {
 .container-fluid.calendar-container {
 	background-color: #E67E22;
 }
-
 .container-fluid.first-container > div,
 .container-fluid.info-container > div,
 .container-fluid.calendar-container > div,
-.container-fluid.signup-container > div{
+.container-fluid.signup-container > div {
 	display: table-cell;
 	vertical-align: middle;
 }
@@ -129,7 +128,6 @@ html, body {
 	position: absolute;
 	width: 100%;
 	margin-bottom: 0px;
-	z-index:1;
 }
 
 .no-top-margin {

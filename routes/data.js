@@ -2,6 +2,8 @@ var express = require('express');
 var pg = require('pg').native;
 pg.defaults.poolSize = 5;
 
+var squel = require('squel');
+
 // set up the expedia
 var expediaOptions = {
 	apiKey: 'qrqf5eh4hfu7xrsqgmqrut8e',
@@ -31,7 +33,8 @@ var yesterday = moment().subtract('1', 'days').format('YYYY-MM-DD');
 router.get('/signup', function(req, res) {
 	if (validator.isEmail(req.query.email)){
 		pg.connect(conString, function(err, client, done) {
-			client.query('INSERT INTO signups (email, date) VALUES ($1, $2)', [req.query.email, moment()], function(err, result) {
+			var query = squel.insert({ numberedParameters: true }).into('signups').set('email', req.query.email).set('date', moment().format()).toParam();
+			client.query(query.text, query.values, function(err, result) {
 				done();
 				res.json(200, {'valid': true});
 			})
@@ -49,9 +52,12 @@ router.get('/calendar', function(req, res) {
 		res.json(200, {'error': 'this city does not exist'});
 		return;
 	}
+	var s = squel.select({ numberedParameters: true });
+	s = s.field('to_char(date, \'MM/DD/YYYY\')', 'date').field('average').from('daily_averages').where('country = ?', req.query.country).where('city = ?', req.query.city).where('date >= ?', yesterday);
 
+	query = s.toParam();
 	pg.connect(conString, function(err, client, done) {
-		client.query('SELECT to_char(date, \'MM/DD/YYYY\') AS date, average FROM daily_averages WHERE city = $1 AND country = $2 AND date >= $3', [req.query.city, req.query.country, yesterday], function(err, result) {
+		client.query(query.text, query.values, function(err, result) {
 			done();
 			res.json(200, {'result': result.rows});
 		})
@@ -100,11 +106,14 @@ router.get('/regions', function(req, res) {
 	var arrivalDate = req.query.arrivalDate === undefined ? moment().add('months', 1).format('YYYY-MM-DD') : req.query.arrivalDate;
 	var departureDate = req.query.departureDate === undefined ? moment().add('months', 1).add('days', 7).format('YYYY-MM-DD') : req.query.departureDate;
 
-	queryString = 'SELECT region_range_averages.region_id, region_range_averages.average, city_region_items.coordinates FROM region_range_averages JOIN city_region_items ON region_range_averages.region_id = city_region_items.region_id WHERE city_region_items.country = $1 AND city_region_items.city = $2 AND region_range_averages.check_in_date = $3 AND region_range_averages.check_out_date = $4';
-	queryParameters = [country, city, arrivalDate, departureDate];
+	var s = squel.select({ numberedParameters: true });
+	s = s.field('region_range_averages.region_id').field('region_range_averages.average').field('city_region_items.coordinates');
+	s = s.from('region_range_averages').join('city_region_items', null, 'region_range_averages.region_id = city_region_items.region_id');
+	s = s.where('city_region_items.country = ?', country).where('city_region_items.city = ?', city).where('region_range_averages.check_in_date = ?', arrivalDate).where('region_range_averages.check_out_date = ?', departureDate);
 
+	query = s.toParam();
 	pg.connect(conString, function(err, client, done) {
-		client.query(queryString, queryParameters, function(err, result) {
+		client.query(query.text, query.values, function(err, result) {
 			done();
 			res.json(200, {'result': result === undefined ? [] : result.rows});
 		})
@@ -125,17 +134,22 @@ router.get('/regional-list', function(req, res) {
 	var minRate = req.query.minRate === undefined ? 0 : req.query.minRate;
 	var regionId = req.query.region;
 
+	var s = squel.select({ numberedParameters: true });
+	s = s.field('room_range_averages.hotel_id').field('room_range_averages.room_id').field('room_range_averages.average').field('hotel_items.hotel_name').field('hotel_items.stars').field('hotel_items.longitude').field('hotel_items.latitude').field('image_items.url');
+	s = s.from('room_range_averages').join('hotel_items', null, 'room_range_averages.hotel_id = hotel_items.id').join('image_items', null, 'room_range_averages.hotel_id = image_items.hotel_id').join('region_hotel_mapping', null, 'room_range_averages.hotel_id = region_hotel_mapping.hotel_id');
+	s = s.where('room_range_averages.cheapest_room = \'t\'').where('image_items.default_image = \'t\'').where('region_hotel_mapping.region_id = ?', regionId).where('room_range_averages.check_in_date = ?', arrivalDate).where('room_range_averages.check_out_date = ?', departureDate);
+	s = s.where('room_range_averages.average >= ?', minRate);
 	if (req.query.maxRate !== undefined){
-		var maxRate = req.query.maxRate;
-		var queryParameters = [regionId, minStarRating, maxStarRating, arrivalDate, departureDate, minRate, maxRate];
-		var queryString = 'SELECT room_range_averages.hotel_id, room_range_averages.room_id, room_range_averages.average, hotel_items.hotel_name, hotel_items.stars, hotel_items.longitude, hotel_items.latitude, image_items.url FROM room_range_averages JOIN hotel_items ON room_range_averages.hotel_id = hotel_items.id JOIN image_items ON room_range_averages.hotel_id = image_items.hotel_id JOIN region_hotel_mapping ON room_range_averages.hotel_id = region_hotel_mapping.hotel_id WHERE region_hotel_mapping.region_id = $1 AND hotel_items.stars BETWEEN $2 AND $3 AND room_range_averages.check_in_date = $4 AND room_range_averages.check_out_date = $5 AND room_range_averages.average BETWEEN $6 AND $7 AND room_range_averages.cheapest_room = \'t\' AND image_items.default_image = \'t\'';
-	} else {
-		var queryParameters = [regionId, minStarRating, maxStarRating, arrivalDate, departureDate, minRate];
-		var queryString = 'SELECT room_range_averages.hotel_id, room_range_averages.room_id, room_range_averages.average, hotel_items.hotel_name, hotel_items.stars, hotel_items.longitude, hotel_items.latitude, image_items.url FROM room_range_averages JOIN hotel_items ON room_range_averages.hotel_id = hotel_items.id JOIN image_items ON room_range_averages.hotel_id = image_items.hotel_id JOIN region_hotel_mapping ON room_range_averages.hotel_id = region_hotel_mapping.hotel_id WHERE region_hotel_mapping.region_id = $1 AND hotel_items.stars BETWEEN $2 AND $3 AND room_range_averages.check_in_date = $4 AND room_range_averages.check_out_date = $5 AND room_range_averages.average >= $6 AND room_range_averages.cheapest_room = \'t\' AND image_items.default_image = \'t\'';
+		s = s.where('room_range_averages.average <= ?'. req.query.maxRate);
 	}
+	if (minStarRating != 0) {
+		s = s.where('hotel_items.stars >= ?', minStarRating);
+	}
+	s = s.where('hotel_items.stars <= ?', maxStarRating);
 
+	query = s.toParam();
 	pg.connect(conString, function(err, client, done) {
-		client.query(queryString, queryParameters, function(err, result) {
+		client.query(query.text, query.values, function(err, result) {
 			done();
 			res.json(200, {'result': result === undefined ? [] : result.rows});
 		});
@@ -162,22 +176,29 @@ router.get('/list', function(req, res) {
 	var maxStarRating = req.query.maxStarRating === undefined ? 5 : req.query.maxStarRating;
 	var minRate = req.query.minRate === undefined ? 0 : req.query.minRate;
 
-	if (req.query.maxRate !== undefined){
-		var maxRate = req.query.maxRate;
-		var queryParameters = [country, city, minStarRating, maxStarRating, arrivalDate, departureDate, minRate, maxRate, page * 20];
-		var queryString = 'SELECT room_range_averages.hotel_id, room_range_averages.room_id, room_range_averages.average, hotel_items.hotel_name, hotel_items.stars, hotel_items.longitude, hotel_items.latitude, image_items.url FROM room_range_averages JOIN hotel_items ON room_range_averages.hotel_id = hotel_items.id JOIN image_items ON room_range_averages.hotel_id = image_items.hotel_id WHERE hotel_items.country = $1 AND hotel_items.city = $2 AND hotel_items.stars BETWEEN $3 AND $4 AND room_range_averages.check_in_date = $5 AND room_range_averages.check_out_date = $6 AND room_range_averages.average BETWEEN $7 AND $8 AND room_range_averages.cheapest_room = \'t\' AND image_items.default_image = \'t\' OFFSET $9 LIMIT 20';
-	} else {
-		var queryParameters = [country, city, minStarRating, maxStarRating, arrivalDate, departureDate, minRate, page * 20];
-		var queryString = 'SELECT room_range_averages.hotel_id, room_range_averages.room_id, room_range_averages.average, hotel_items.hotel_name, hotel_items.stars, hotel_items.longitude, hotel_items.latitude, image_items.url FROM room_range_averages JOIN hotel_items ON room_range_averages.hotel_id = hotel_items.id JOIN image_items ON room_range_averages.hotel_id = image_items.hotel_id WHERE hotel_items.country = $1 AND hotel_items.city = $2 AND hotel_items.stars BETWEEN $3 AND $4 AND room_range_averages.check_in_date = $5 AND room_range_averages.check_out_date = $6 AND room_range_averages.average >= $7 AND room_range_averages.cheapest_room = \'t\' AND image_items.default_image = \'t\' OFFSET $8 LIMIT 20';
+	var s = squel.select({ numberedParameters: true });
+	s = s.field('room_range_averages.hotel_id').field('room_range_averages.room_id').field('room_range_averages.average').field('hotel_items.hotel_name').field('hotel_items.stars').field('hotel_items.longitude').field('hotel_items.latitude').field('image_items.url');
+	s = s.from('room_range_averages').join('hotel_items', null, 'room_range_averages.hotel_id = hotel_items.id').join('image_items', null, 'hotel_items.id = image_items.hotel_id');
+	s = s.where('room_range_averages.cheapest_room = \'t\'').where('image_items.default_image = \'t\'');
+	s = s.where('hotel_items.country = ?', country).where('hotel_items.city = ?', city);
+	s = s.where('room_range_averages.check_in_date = ?', arrivalDate).where('room_range_averages.check_out_date = ?', departureDate);
+	if (minStarRating != 0){
+		s = s.where('hotel_items.stars >= ?', minStarRating);
 	}
+	s = s.where('hotel_items.stars <= ?', maxStarRating);
+	s = s.where('room_range_averages.average >= ?', minRate);
+	if (req.query.maxRate !== undefined){
+		s = s.where('room_range_averages.average <= ?', req.query.maxRate);
+	}
+	s = s.offset(page * 20).limit(20);
 
+	query = s.toParam();
 	pg.connect(conString, function(err, client, done) {
-		client.query(queryString, queryParameters, function(err, result) {
+		client.query(query.text, query.values, function(err, result) {
 			done();
 			res.json(200, {'result': result === undefined ? [] : result.rows, 'page': page});
 		});
 	});
 });
-
 
 module.exports = router;

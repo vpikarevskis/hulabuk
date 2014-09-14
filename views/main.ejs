@@ -4,11 +4,10 @@
 		<title><%= title %></title>
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 		<link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet" media="screen">
-		<link href="//fonts.googleapis.com/css?family=Molle:400italic" rel="stylesheet">
 		<link href="//fonts.googleapis.com/css?family=Lato:300,400,700" rel="stylesheet">
 		<link href="/stylesheets/flat-ui.css" rel="stylesheet">
-		<link rel='shortcut icon' href="/images/landing/logo_v3.png" type='image/x-icon'>
-		<link rel='icon' href="/images/landing/logo_v3.png" type='image/x-icon'>
+		<link rel='shortcut icon' href="/images/icons/png/favicon.png" type='image/x-icon'>
+		<link rel='icon' href="/images/icons/png/favicon.png" type='image/x-icon'>
 		<link href="/stylesheets/angular-date-range-picker.css" rel="stylesheet">
 		<link href="/stylesheets/angular-block-ui.min.css" rel="stylesheet">
 		<link href="/stylesheets/three-quarters.css" rel="stylesheet">
@@ -17,61 +16,109 @@
 	<body ng-app="sharikiApp">
 		<div ng-controller="MainAppCtrl">
 			<!-- Navigation -->
-			<div class="container-fluid navbar-abs" role="navigation" ng-show="!showHotelList">
-				<div class="row">
-					<div class="col-xs-12 col-md-12">
-						<h6>
-							<a class="welcome pull-left" href="/">hulabuk</a>
-							<a class="btn btn-default pull-right" href="/about">about</a>
-						</h6>
+			<div class="hidden-xs hidden-sm container-fluid navbar-abs" role="navigation" ng-show="!showHotelList">
+				<div class="row mtl">
+					<div class="col-md-1">
+						<a class="pull-left" href="/"><img class="img-responsive img-logo" src="images/icons/svg/logo.svg"></a>
+					</div>
+					<div class="col-md-offset-10 col-md-1">
+						<a class="btn btn-default pull-right" href="/about">about</a>
 					</div>
 				</div>
 			</div>
 
 			<!-- Content -->
 			<div class="container-fluid first-container" ng-show="!showHotelList">
-				<div class="container">
+				<div class="hidden-md hidden-lg">
+					<div class="row mtl">
+						<div class="col-xs-8 col-xs-offset-2">
+							<a class="pull-left" href="/"><img class="img-responsive img-logo" src="images/icons/svg/logo.svg"></a>
+						</div>
+					</div>
+					<div class="row">
+						<div class="col-xs-12">
+							<div>
+								<div block-ui="jumbotronBlock"></div>
+								<div class="row mtl ng-cloak">
+									<div class="col-xs-12 col-md-6">
+										<button class="btn btn-block btn-info mbl" ng-click="setLocation('9B0681E3-6D9F-47E8-8E14-5389F83569DD')">Paris, France<span ng-show="cityLocationId == '9B0681E3-6D9F-47E8-8E14-5389F83569DD'">&nbsp;&nbsp;</span><span ng-show="cityLocationId == '9B0681E3-6D9F-47E8-8E14-5389F83569DD'" class="fui-check-inverted"></span></button>
+									</div>
+									<div class="col-xs-12 col-md-6">
+										<button class="btn btn-block btn-info mbl" ng-click="setLocation('CA62CF56-3490-467B-B531-99D1956120C4')">Rome, Italy<span ng-show="cityLocationId == 'CA62CF56-3490-467B-B531-99D1956120C4'">&nbsp;&nbsp;</span><span ng-show="cityLocationId == 'CA62CF56-3490-467B-B531-99D1956120C4'" class="fui-check-inverted"></span></button>
+									</div>
+								</div>
+								<div class="well well-sm">
+									<date-range-picker ng-model="selectedRange" always-visible="true" ranged="true" past-dates="true" calendar-averages="calendarAverages" class="row calendar-row ng-cloak"></date-range-picker>
+									<div class="row">
+										<div class="col-xs-2 col-md-2">
+											<p class="pull-right">£</p>
+										</div>
+										<div class="col-xs-8 col-md-8">
+											<div class="progress">
+									            <div class="progress-bar nephritis" style="width: 12.5%;"></div>
+									            <div class="progress-bar emerald" style="width: 12.5%;"></div>
+									            <div class="progress-bar sunflower" style="width: 12.5%;"></div>
+									            <div class="progress-bar orange" style="width: 12.5%;"></div>
+									            <div class="progress-bar carrot" style="width: 12.5%;"></div>
+									            <div class="progress-bar pumpkin" style="width: 12.5%;"></div>
+									            <div class="progress-bar alizarin" style="width: 12.5%;"></div>
+									            <div class="progress-bar pomegranate" style="width: 12.5%;"></div>
+									        </div>
+		          						</div>
+		          						<div class="col-xs-2 col-md-2">
+											<p>£££</p>
+										</div>
+									</div>
+								</div>
+								<div class="mtl row ng-cloak">
+									<div class="col-xs-12 col-md-12">
+										<button ng-class="{'btn btn-block btn-default disabled': selectedRange.end === undefined, 'btn btn-block btn-info': selectedRange.end !== undefined}" ng-click="seeHotels()">see honest hotel prices</button>
+									</div>	
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="container hidden-xs hidden-sm">
 					<div class="row">
 						<div class="col-xs-12 col-md-offset-1 col-md-10">
-							<div class="jumbotron">
-								<div>
-									<div block-ui="jumbotronBlock"></div>
-									<div class="row ng-cloak">
-										<div class="col-xs-12 col-md-6">
-											<button class="btn btn-block btn-info mbl" ng-click="setLocation('9B0681E3-6D9F-47E8-8E14-5389F83569DD')">Paris, France<span ng-show="cityLocationId == '9B0681E3-6D9F-47E8-8E14-5389F83569DD'">&nbsp;&nbsp;</span><span ng-show="cityLocationId == '9B0681E3-6D9F-47E8-8E14-5389F83569DD'" class="fui-check-inverted"></span></button>
-										</div>
-										<div class="col-xs-12 col-md-6">
-											<button class="btn btn-block btn-info mbl" ng-click="setLocation('CA62CF56-3490-467B-B531-99D1956120C4')">Rome, Italy<span ng-show="cityLocationId == 'CA62CF56-3490-467B-B531-99D1956120C4'">&nbsp;&nbsp;</span><span ng-show="cityLocationId == 'CA62CF56-3490-467B-B531-99D1956120C4'" class="fui-check-inverted"></span></button>
-										</div>
+							<div>
+								<div block-ui="jumbotronBlock"></div>
+								<div class="row ng-cloak">
+									<div class="col-xs-12 col-md-6">
+										<button class="btn btn-block btn-info mbl" ng-click="setLocation('9B0681E3-6D9F-47E8-8E14-5389F83569DD')">Paris, France<span ng-show="cityLocationId == '9B0681E3-6D9F-47E8-8E14-5389F83569DD'">&nbsp;&nbsp;</span><span ng-show="cityLocationId == '9B0681E3-6D9F-47E8-8E14-5389F83569DD'" class="fui-check-inverted"></span></button>
 									</div>
-									<div class="well">
-										<date-range-picker ng-model="selectedRange" always-visible="true" ranged="true" past-dates="true" calendar-averages="calendarAverages" class="row calendar-row ng-cloak"></date-range-picker>
-										<div class="row">
-											<div class="col-xs-2 col-md-2">
-												<p class="pull-right">£</p>
+									<div class="col-xs-12 col-md-6">
+										<button class="btn btn-block btn-info mbl" ng-click="setLocation('CA62CF56-3490-467B-B531-99D1956120C4')">Rome, Italy<span ng-show="cityLocationId == 'CA62CF56-3490-467B-B531-99D1956120C4'">&nbsp;&nbsp;</span><span ng-show="cityLocationId == 'CA62CF56-3490-467B-B531-99D1956120C4'" class="fui-check-inverted"></span></button>
+									</div>
+								</div>
+								<div class="well">
+									<date-range-picker ng-model="selectedRange" always-visible="true" ranged="true" past-dates="true" calendar-averages="calendarAverages" class="row calendar-row ng-cloak"></date-range-picker>
+									<div class="row">
+										<div class="col-xs-2 col-md-2">
+											<p class="pull-right">£</p>
+										</div>
+										<div class="col-xs-8 col-md-8">
+											<div class="progress">
+									            <div class="progress-bar nephritis" style="width: 12.5%;"></div>
+									            <div class="progress-bar emerald" style="width: 12.5%;"></div>
+									            <div class="progress-bar sunflower" style="width: 12.5%;"></div>
+									            <div class="progress-bar orange" style="width: 12.5%;"></div>
+									            <div class="progress-bar carrot" style="width: 12.5%;"></div>
+									            <div class="progress-bar pumpkin" style="width: 12.5%;"></div>
+									            <div class="progress-bar alizarin" style="width: 12.5%;"></div>
+									            <div class="progress-bar pomegranate" style="width: 12.5%;"></div>
+									        </div>
+		          						</div>
+			          						<div class="col-xs-2 col-md-2">
+												<p>£££</p>
 											</div>
-											<div class="col-xs-8 col-md-8">
-												<div class="progress">
-										            <div class="progress-bar nephritis" style="width: 12.5%;"></div>
-										            <div class="progress-bar emerald" style="width: 12.5%;"></div>
-										            <div class="progress-bar sunflower" style="width: 12.5%;"></div>
-										            <div class="progress-bar orange" style="width: 12.5%;"></div>
-										            <div class="progress-bar carrot" style="width: 12.5%;"></div>
-										            <div class="progress-bar pumpkin" style="width: 12.5%;"></div>
-										            <div class="progress-bar alizarin" style="width: 12.5%;"></div>
-										            <div class="progress-bar pomegranate" style="width: 12.5%;"></div>
-										        </div>
-			          						</div>
-				          						<div class="col-xs-2 col-md-2">
-													<p>£££</p>
-												</div>
-										</div>
 									</div>
-									<div class="mtl row ng-cloak">
-										<div class="col-xs-12 col-md-12">
-											<button ng-class="{'btn btn-block btn-default disabled': selectedRange.end === undefined, 'btn btn-block btn-info': selectedRange.end !== undefined}" ng-click="seeHotels()">see honest hotel prices</button>
-										</div>	
-									</div>
+								</div>
+								<div class="mtl row ng-cloak">
+									<div class="col-xs-12 col-md-12">
+										<button ng-class="{'btn btn-block btn-default disabled': selectedRange.end === undefined, 'btn btn-block btn-info': selectedRange.end !== undefined}" ng-click="seeHotels()">see honest hotel prices</button>
+									</div>	
 								</div>
 							</div>
 						</div>
