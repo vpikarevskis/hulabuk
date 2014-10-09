@@ -139,9 +139,11 @@ router.get('/regional-list', function(req, res) {
 	s = s.from('room_range_averages').join('hotel_items', null, 'room_range_averages.hotel_id = hotel_items.id').join('image_items', null, 'room_range_averages.hotel_id = image_items.hotel_id').join('region_hotel_mapping', null, 'room_range_averages.hotel_id = region_hotel_mapping.hotel_id');
 	s = s.where('room_range_averages.cheapest_room = \'t\'').where('image_items.default_image = \'t\'').where('region_hotel_mapping.region_id = ?', regionId).where('room_range_averages.check_in_date = ?', arrivalDate).where('room_range_averages.check_out_date = ?', departureDate);
 	s = s.where('room_range_averages.average >= ?', minRate);
+
 	if (req.query.maxRate !== undefined){
-		s = s.where('room_range_averages.average <= ?'. req.query.maxRate);
+		s = s.where('room_range_averages.average <= ?', req.query.maxRate);
 	}
+
 	if (minStarRating != 0) {
 		s = s.where('hotel_items.stars >= ?', minStarRating);
 	}
