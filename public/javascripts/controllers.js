@@ -13,6 +13,7 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 		'9B0681E3-6D9F-47E8-8E14-5389F83569DD': {'country': 'FR', 'city': 'Paris'},
 		'CA62CF56-3490-467B-B531-99D1956120C4': {'country': 'IT', 'city': 'Rome'}};
 
+	$scope.regions = [];
 	$scope.markers = [];
 	$scope.hiddenHotels = [];
 	$scope.regionColors = ['#27ae60', '#2ecc71', '#f1c40f', '#f39c12', '#e67e22', '#d35400', '#e74c3c', '#c0392b'];
@@ -37,30 +38,27 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 	$scope.starSliderOptions = {
 			'range': true,
 			'change': function(event, ui){
-				$scope.sliderChange();
+				$scope.applyFilters();
 			}
 	};
 
 	$scope.rateSliderOptions = {
 			'range': true,
 			'change': function(event, ui){
-				$scope.sliderChange();
+				$scope.applyFilters();
 			}
 	};
 
-	$scope.sliderChange = function(){
-		$scope.sliderChangeCount++;
-		if ($scope.sliderChangeCount > 8){
-
-			if ($scope.blocking){
-				$scope.canceller.resolve();
-				$scope.blocking = false;
+	$scope.$watch('requests', function(newValue, oldvalue){
+		if (newValue == 0){
+			var jumbotronBlock = blockUI.instances.get('jumbotronBlock');
+			if (jumbotronBlock.state().blockCount > 0){
+				jumbotronBlock.stop();
 			}
-			
-			$scope.blocking = true;
-			$scope.seeHotels();
+			$scope.showHotelList = true;
+			$scope.mapLoaded = true;
 		}
-	};
+	});
 
 	$scope.loadMarkers = function(region){
 		var arrivalDate = $scope.selectedRange.start.format("YYYY-MM-DD");
@@ -119,7 +117,6 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 				}
 				marker.icon = $scope.icons[buc];
 			});
-
 			region.hide = true;
 			$scope.markers = newMarkers;
 		});
@@ -165,63 +162,122 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 		var maxRate = $scope.rates[1] == 500 ? "" : "&maxRate=" + $scope.rates[1];
 		var jumbotronBlock = blockUI.instances.get('jumbotronBlock');
 
-		if (!$scope.blocking){
-			jumbotronBlock.start("Getting best hotels for you...");
+		jumbotronBlock.start("Getting best hotels for you...");
+		$scope.requests = 2;
+
+		$scope.hotelsById = {};
+
+		$http.get("/data/regions?country=" + $scope.locationData[$scope.cityLocationId].country + "&city=" + $scope.locationData[$scope.cityLocationId].city + "&arrivalDate=" + arrivalDate + "&departureDate=" + departureDate).success(function(dataRegions){
+			var minRegionRate = Number.MAX_VALUE;
+			var maxRegionRate = 0;
+			var latitude = 0;
+			var longitude = 0;
+			var coordCount = 0;
+			angular.forEach(dataRegions.result, function(region){
+				if (minRegionRate > region.average){
+					minRegionRate = region.average;
+				}
+				if (maxRegionRate < region.average){
+					maxRegionRate = region.average;
+				}
+				var coordinatesString = region.coordinates.split(":");
+				var coordinates = new Array(coordinatesString.length);
+				angular.forEach(coordinatesString, function(coordinatesPair, index){
+					var ll = coordinatesPair.split(";");
+					coordinates[index] = {latitude: ll[0], longitude: ll[1]};
+					latitude += parseFloat(ll[0]);
+					longitude += parseFloat(ll[1]);
+					coordCount++;
+				});
+				region.coordinates = coordinates;
+			});
+			latitude /= coordCount;
+			longitude /= coordCount;
+			$scope.map.center = {latitude: latitude, longitude: longitude};
+
+			var rateStep = (maxRegionRate - minRegionRate) / 8;
+			angular.forEach(dataRegions.result, function(region){
+				var buc = Math.floor((region.average - minRegionRate) / rateStep);
+				if (buc == 8){
+					buc = 7;
+				}
+				region.coloring = {color: $scope.regionColors[buc], width: 0, opacity: 0.5};
+				region.hide = false;
+				region.onClicked = function(){
+					$scope.loadMarkers(region);
+				};
+			});
+		
+			$scope.regions = dataRegions.result;
+			$scope.requests--;
+		});
+
+		$http.get("/data/list?country=" + $scope.locationData[$scope.cityLocationId].country + "&city=" + $scope.locationData[$scope.cityLocationId].city + "&arrivalDate=" + arrivalDate + "&departureDate=" + departureDate + "&minStarRating=" + $scope.stars[0] + "&maxStarRating=" + $scope.stars[1] + "&minRate=" + $scope.rates[0] + maxRate).success(function(data){
+			$scope.hotelIdList = "";
+			
+			angular.forEach(data.result, function(hotel, index){
+				hotel.icon = '/images/markers/marker-blue.png';
+				hotel.stars = new Array(parseInt(hotel.stars));
+				hotel.shown = false;
+				hotel.bookingUrl = "";
+				hotel.loading = true;
+				$scope.hotelsById[hotel.hotel_id] = hotel;
+				$scope.hotelIdList += hotel.hotel_id;
+				if (index < data.result.length - 1){
+					$scope.hotelIdList += ",";
+				}
+			});
+
+			$scope.hotels = data.result;
+
+			if ($scope.hotels.length  > 0){
+				$scope.requests++;
+				var sessionId = $scope.customerSessionId === undefined ? "" : "&customerSessionId=" + $scope.customerSessionId;
+				$http.get("/data/pricing?arrivalDate=" + $scope.selectedRange.start.format("MM/DD/YYYY") + "&departureDate=" + $scope.selectedRange.end.format("MM/DD/YYYY") + "&hotelIdList=" + $scope.hotelIdList + sessionId).success(function(dataPricing){
+					if (dataPricing.HotelListResponse.EanWsError === undefined){
+						if (dataPricing.HotelListResponse.HotelList.HotelSummary.length === undefined){
+							dataPricing.HotelListResponse.HotelList.HotelSummary = [dataPricing.HotelListResponse.HotelList.HotelSummary];
+						}
+						angular.forEach(dataPricing.HotelListResponse.HotelList.HotelSummary, function(hotel){
+							$scope.hotelsById[hotel.hotelId].bookingUrl = $scope.constructUrl($scope.hotelsById[hotel.hotelId], hotel.RoomRateDetailsList, hotel.supplierType);
+							$scope.hotelsById[hotel.hotelId].average = hotel.RoomRateDetailsList.RoomRateDetails.RateInfo.ChargeableRateInfo["@averageRate"];
+							$scope.hotelsById[hotel.hotelId].priceUpdated = true;
+						});
+					}
+
+					angular.forEach(data.result, function(hotel){
+						hotel.loading = false;
+						hotel.loaded = true;
+					});
+					$scope.customerSessionId = dataPricing.HotelListResponse.customerSessionId;
+					$scope.requests--;
+				});
+			}
+
+			$scope.moreResultsAvailable = $scope.hotels.length > 0;
+			$scope.page = data.page;
+			while ($scope.markers.length > 0) { $scope.markers.pop(); }
+			$scope.requests--;
+		});
+	};
+
+	$scope.applyFilters = function() {
+		$scope.sliderChangeCount++;
+		if ($scope.sliderChangeCount <= 8){
+			return;
+		}
+
+		if ($scope.blocking){
+			$scope.canceller.resolve();
 		}
 		
+		$scope.blocking = true;
+
+		var arrivalDate = $scope.selectedRange.start.format("YYYY-MM-DD");
+		var departureDate = $scope.selectedRange.end.format("YYYY-MM-DD");
+		var maxRate = $scope.rates[1] == 500 ? "" : "&maxRate=" + $scope.rates[1];
 		$scope.canceller = $q.defer();
 		$scope.hotelsById = {};
-		
-		if ($scope.lastLocation != $scope.cityLocationId){
-			$scope.lastLocation = $scope.cityLocationId;
-			$http.get("/data/regions?country=" + $scope.locationData[$scope.cityLocationId].country + "&city=" + $scope.locationData[$scope.cityLocationId].city + "&arrivalDate=" + arrivalDate + "&departureDate=" + departureDate).success(function(dataRegions){
-				var minRegionRate = Number.MAX_VALUE;
-				var maxRegionRate = 0;
-				var latitude = 0;
-				var longitude = 0;
-				var coordCount = 0;
-				angular.forEach(dataRegions.result, function(region){
-					if (minRegionRate > region.average){
-						minRegionRate = region.average;
-					}
-					if (maxRegionRate < region.average){
-						maxRegionRate = region.average;
-					}
-					var coordinatesString = region.coordinates.split(":");
-					var coordinates = new Array(coordinatesString.length);
-					angular.forEach(coordinatesString, function(coordinatesPair, index){
-						var ll = coordinatesPair.split(";");
-						coordinates[index] = {latitude: ll[0], longitude: ll[1]};
-						latitude += parseFloat(ll[0]);
-						longitude += parseFloat(ll[1]);
-						coordCount++;
-					});
-					region.coordinates = coordinates;
-				});
-				latitude /= coordCount;
-				longitude /= coordCount;
-				$scope.map.center = {latitude: latitude, longitude: longitude};
-
-				var rateStep = (maxRegionRate - minRegionRate) / 8;
-				angular.forEach(dataRegions.result, function(region){
-					var buc = Math.floor((region.average - minRegionRate) / rateStep);
-					if (buc == 8){
-						buc = 7;
-					}
-					region.coloring = {color: $scope.regionColors[buc], width: 0, opacity: 0.5};
-					region.hide = false;
-					region.onClicked = function(){
-						$scope.loadMarkers(region);
-					};
-				});
-
-				$scope.regions = dataRegions.result;
-			});
-		} else { 
-			angular.forEach($scope.regions, function(region){
-				region.hide = false;
-			});
-		}
 
 		$http.get("/data/list?country=" + $scope.locationData[$scope.cityLocationId].country + "&city=" + $scope.locationData[$scope.cityLocationId].city + "&arrivalDate=" + arrivalDate + "&departureDate=" + departureDate + "&minStarRating=" + $scope.stars[0] + "&maxStarRating=" + $scope.stars[1] + "&minRate=" + $scope.rates[0] + maxRate, {timeout: $scope.canceller ? $scope.canceller.promise : undefined}).success(function(data){
 			$scope.hotelIdList = "";
@@ -265,17 +321,11 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 				$scope.blocking = false;
 			}
 
-			if (jumbotronBlock.state().blockCount > 0){
-				jumbotronBlock.stop();
-			}
-
-			$scope.markers = [];
 			$scope.moreResultsAvailable = $scope.hotels.length > 0;
 			$scope.page = data.page;
 			$scope.selectedHotel = false;
-			$scope.showHotelList = true;
-			$scope.mapLoaded = true;
 		});
+		$scope.resetMap();
 	};
 
 	$scope.loadMore = function() {
@@ -287,6 +337,10 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 		var arrivalDate = $scope.selectedRange.start.format("YYYY-MM-DD");
 		var departureDate = $scope.selectedRange.end.format("YYYY-MM-DD");
 		var maxRate = $scope.rates[1] == 500 ? "" : "&maxRate=" + $scope.rates[1];
+
+		if ($scope.blocking){
+			$scope.canceller.resolve();
+		}
 
 		$scope.blocking = true;
 		$scope.canceller = $q.defer();
@@ -345,7 +399,7 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 		angular.forEach($scope.markers, function(marker){
 			marker.shown = false;
 		});
-		$scope.markers = [];
+		while ($scope.markers.length > 0) { $scope.markers.pop(); }
 		angular.forEach($scope.regions, function(region){
 			region.hide = false;
 		});
@@ -354,7 +408,6 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 	$scope.mouseOverHotelListing = function(hotel) {
 		hotel.old_icon = hotel.icon;
 		hotel.icon = '/images/markers/marker-blue.png';
-		console.log(hotel);
 		if (!hotel.shown){
 			$scope.markers.push(hotel);
 		}
@@ -426,8 +479,10 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 			$scope.blocking = false;
 			$scope.canceller.resolve();
 		}
+		while ($scope.regions.length > 0) { $scope.regions.pop(); }
+		while ($scope.markers.length > 0) { $scope.markers.pop(); }
 		$scope.showHotelList = false;
-		$scope.hotels = [];
+		$scope.selectedHotel = false;
 	};
 
 	$scope.setLocation = function(locationId)

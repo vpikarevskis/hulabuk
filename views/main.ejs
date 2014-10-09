@@ -196,7 +196,7 @@
 					</div>
 					<div class="col-md-5 col-xs-12 col-map">
 						<button class="btn btn-primary btn-map-clear mtl" ng-click="resetMap()">reset map</button>
-						<google-map center="map.center" control="map.control" options="map.options" ng-if="mapLoaded || showHotelList" draggable="true" control="map.control" zoom="map.zoom">
+						<google-map center="map.center" control="map.control" options="map.options" ng-if="mapLoaded" draggable="true" control="map.control" zoom="map.zoom">
 							<marker ng-repeat="marker in markers track by $index" coords="marker" idKey="marker.hotel_id" events="{'click': marker.onClicked}" icon="marker.icon"></marker>
 							<polygon ng-repeat="region in regions track by $index" clickable="true" events="{'click': region.onClicked}" path="region.coordinates" fill="region.coloring" stroke="region.coloring" static="true" visible="!region.hide"></polygon>
 						</google-map>
