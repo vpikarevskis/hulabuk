@@ -49,7 +49,7 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 			}
 	};
 
-	$scope.$watch('requests', function(newValue, oldvalue){
+	$scope.$watch('requests', function(newValue, oldValue){
 		if (newValue == 0){
 			var jumbotronBlock = blockUI.instances.get('jumbotronBlock');
 			if (jumbotronBlock.state().blockCount > 0){
@@ -279,6 +279,7 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 		$scope.canceller = $q.defer();
 		$scope.hotelsById = {};
 
+		
 		$http.get("/data/list?country=" + $scope.locationData[$scope.cityLocationId].country + "&city=" + $scope.locationData[$scope.cityLocationId].city + "&arrivalDate=" + arrivalDate + "&departureDate=" + departureDate + "&minStarRating=" + $scope.stars[0] + "&maxStarRating=" + $scope.stars[1] + "&minRate=" + $scope.rates[0] + maxRate, {timeout: $scope.canceller ? $scope.canceller.promise : undefined}).success(function(data){
 			$scope.hotelIdList = "";
 			angular.forEach(data.result, function(hotel, index){
@@ -324,8 +325,8 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 			$scope.moreResultsAvailable = $scope.hotels.length > 0;
 			$scope.page = data.page;
 			$scope.selectedHotel = false;
+			$scope.resetMap();
 		});
-		$scope.resetMap();
 	};
 
 	$scope.loadMore = function() {
@@ -396,10 +397,7 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 	$scope.resetMap = function(){
 		$scope.minRate = Number.MAX_VALUE;
 		$scope.maxRate = 0;
-		angular.forEach($scope.markers, function(marker){
-			marker.shown = false;
-		});
-		while ($scope.markers.length > 0) { $scope.markers.pop(); }
+		while ($scope.markers.length > 0) { $scope.markers.pop().shown = false; }
 		angular.forEach($scope.regions, function(region){
 			region.hide = false;
 		});
