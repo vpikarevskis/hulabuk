@@ -1,4 +1,4 @@
-var sharikiApp = angular.module('sharikiApp', ['ui.slider', 'dateRangePicker', 'google-maps', 'blockUI']);
+var sharikiApp = angular.module('sharikiApp', ['ui.slider', 'dateRangePicker', 'google-maps'.ns(), 'blockUI']);
 
 sharikiApp.config(function(	blockUIConfigProvider){
 	blockUIConfigProvider.autoBlock(false);
@@ -150,7 +150,7 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 	};
 
 	$scope.loadCalendar();
-
+	
 	$scope.seeHotels = function(){
 		if ($scope.selectedRange === undefined)
 		{
@@ -203,8 +203,15 @@ sharikiApp.controller('MainAppCtrl', function($scope, $location, $http, $timeout
 				}
 				region.coloring = {color: $scope.regionColors[buc], width: 0, opacity: 0.5};
 				region.hide = false;
-				region.onClicked = function(){
-					$scope.loadMarkers(region);
+				region.events = {
+					click: function(){
+						$scope.loadMarkers(region)},
+					mouseover: function(){
+						region.coloring.opacity = 0.7;
+					},
+					mouseout: function(){
+						region.coloring.opacity = 0.5;
+					}
 				};
 			});
 		

@@ -196,10 +196,10 @@
 					</div>
 					<div class="col-md-5 col-xs-12 col-map">
 						<button class="btn btn-primary btn-map-clear mtl" ng-click="resetMap()">reset map</button>
-						<google-map center="map.center" control="map.control" options="map.options" ng-if="mapLoaded" draggable="true" control="map.control" zoom="map.zoom">
-							<marker ng-repeat="marker in markers track by $index" coords="marker" idKey="marker.hotel_id" events="{'click': marker.onClicked}" icon="marker.icon"></marker>
-							<polygon ng-repeat="region in regions track by $index" clickable="true" events="{'click': region.onClicked}" path="region.coordinates" fill="region.coloring" stroke="region.coloring" static="true" visible="!region.hide"></polygon>
-						</google-map>
+						<ui-gmap-google-map center="map.center" control="map.control" options="map.options" ng-if="mapLoaded" draggable="true" control="map.control" zoom="map.zoom">
+							<ui-gmap-marker ng-repeat="marker in markers track by $index" coords="marker" idKey="marker.hotel_id" events="{'click': marker.onClicked}" icon="marker.icon"></ui-gmap-marker>
+							<ui-gmap-polygon ng-repeat="region in regions track by $index" clickable="true" path="region.coordinates" fill="region.coloring" stroke="region.coloring" static="true" visible="!region.hide" events="region.events"></ui-gmap-polygon>
+						</ui-gmap-google-map>
 					</div>
 				</div>
 			</div>
@@ -216,6 +216,7 @@
 		<script src="/javascripts/angular-date-range-picker.js"></script>
 		<script src="//maps.googleapis.com/maps/api/js?sensor=false&key=AIzaSyAb3EpsXDg-hpLWpIFJuLmWADvSTRUdTlU"></script>
 		<script src="//cdnjs.cloudflare.com/ajax/libs/lodash.js/2.4.1/lodash.underscore.min.js"></script>
+		<script src="//cdnjs.cloudflare.com/ajax/libs/bluebird/1.2.2/bluebird.min.js"></script>
 		<script src="/javascripts/angular-google-maps.min.js"></script>
 		<script src="/javascripts/application.js"></script>
 		<script>
