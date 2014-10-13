@@ -30,12 +30,13 @@ var router = express.Router();
 var countryData = {'FR': ['Paris'], 'IT': ['Rome']};
 var yesterday = moment().subtract('1', 'days').format('YYYY-MM-DD');
 
-router.get('/signup', function(req, res) {
-	if (validator.isEmail(req.query.email)){
+router.post('/signup', function(req, res) {
+	if (validator.isEmail(req.param('email'))){
 		pg.connect(conString, function(err, client, done) {
-			var query = squel.insert({ numberedParameters: true }).into('signups').set('email', req.query.email).set('date', moment().format()).toParam();
+			var query = squel.insert({ numberedParameters: true }).into('signups').set('email', req.param('email')).set('date', moment().format()).toParam();
 			client.query(query.text, query.values, function(err, result) {
 				done();
+				console.log(err);
 				console.log(result);
 				res.json(200, {'valid': true});
 			})

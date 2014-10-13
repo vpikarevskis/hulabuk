@@ -45,13 +45,16 @@ sharikiLandingApp.controller('LandingCtrl', function($scope, $http, $window, $do
 
 	$scope.signUp = function() {
 		if ($scope.email != undefined) {
-			$http.get("/data/signup?email=" + $scope.email).success(function(data){
+			$http.post("/data/signup", {email: $scope.email}).success(function(data){
 				$scope.showUserFeedback = true;
 				if (data.valid) {
 					$scope.emailValid = true;
 				} else {
 					$scope.emailValid = false;
 				}
+				$document.scrollToElement(angular.element("#signup-container"), 0, 700);
+			}).error(function(data){
+				$scope.emailValid = false;
 				$document.scrollToElement(angular.element("#signup-container"), 0, 700);
 			});	
 		}
