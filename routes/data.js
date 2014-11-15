@@ -94,10 +94,10 @@ router.get('/pricing', function(req, res) {
 
 router.get('/regions', function(req, res) {
 	if (!(req.query.country in countryData)) {
-		res.json(200, {'error': 'this country does not exist'});
+		res.json(404, {'error': 'this country does not exist'});
 		return;
 	} else if (countryData[req.query.country].indexOf(req.query.city) < 0) {
-		res.json(200, {'error': 'this city does not exist'});
+		res.json(404, {'error': 'this city does not exist'});
 		return;
 	}
 	var country = req.query.country;
@@ -112,6 +112,7 @@ router.get('/regions', function(req, res) {
 	s = s.where('city_region_items.country = ?', country).where('city_region_items.city = ?', city).where('region_range_averages.check_in_date = ?', arrivalDate).where('region_range_averages.check_out_date = ?', departureDate);
 
 	query = s.toParam();
+
 	pg.connect(conString, function(err, client, done) {
 		client.query(query.text, query.values, function(err, result) {
 			done();
@@ -120,7 +121,7 @@ router.get('/regions', function(req, res) {
 	});
 });
 
-router.get('/regional-list', function(req, res) {
+router.get('/regionHotels', function(req, res) {
 	if (req.query.region === undefined) {
 		res.json(200, {'error': 'no region specified'});
 		return;
